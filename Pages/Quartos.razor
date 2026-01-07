@@ -5,8 +5,8 @@
 
 <div class="page-header">
     <h1>Gerenciamento de Quartos</h1>
-    <button class="btn btn-primary" @onclick="AbrirModalNovoQuarto">
-        ➕ Novo Quarto
+    <button class="btn btn-primary btn-add-icon" @onclick="AbrirModalNovoQuarto" title="Novo Quarto">
+        ➕
     </button>
 </div>
 
@@ -82,6 +82,9 @@
                 <button class="btn btn-sm btn-secondary" @onclick="() => AlterarStatus(quarto)">
                     🔄 Status
                 </button>
+                <button class="btn btn-sm btn-danger" @onclick="() => ExcluirQuarto(quarto)" title="Excluir quarto">
+                    🗑️ Excluir
+                </button>
             </div>
         </div>
     }
@@ -140,6 +143,10 @@
             
             <div class="modal-footer">
                 <button class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                @if (quartoEdicao.Id > 0)
+                {
+                    <button class="btn btn-danger" @onclick="ExcluirQuartoModal">Excluir</button>
+                }
                 <button class="btn btn-primary" @onclick="SalvarQuarto">Salvar</button>
             </div>
         </div>
@@ -242,6 +249,27 @@
         
         FecharModal();
         CarregarQuartos();
+    }
+
+    private void ExcluirQuarto(Quarto quarto)
+    {
+        if (quarto.Status == StatusQuarto.Ocupado)
+        {
+            // Não permite excluir quartos ocupados
+            return;
+        }
+
+        QuartoService.RemoverQuarto(quarto.Id);
+        CarregarQuartos();
+    }
+
+    private void ExcluirQuartoModal()
+    {
+        if (quartoEdicao.Id > 0)
+        {
+            ExcluirQuarto(quartoEdicao);
+            FecharModal();
+        }
     }
 
     private void FecharModal()
