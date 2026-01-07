@@ -142,14 +142,72 @@
             <div class="modal-body">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Hóspede:</label>
-                        <select @bind="reservaEdicao.HospedeId" class="form-control">
-                            <option value="0">Selecione um hóspede</option>
-                            @foreach (var hospede in HospedeService.ObterTodos())
-                            {
-                                <option value="@hospede.Id">@hospede.Nome</option>
-                            }
-                        </select>
+                        <div class="form-group-header">
+                            <label>Hóspede:</label>
+                            <button class="btn btn-sm btn-primary" @onclick="() => mostrarFormNovoHospede = !mostrarFormNovoHospede" 
+                                    type="button" title="Novo Hóspede">
+                                ➕
+                            </button>
+                        </div>
+                        
+                        @if (mostrarFormNovoHospede)
+                        {
+                            <div class="novo-hospede-form">
+                                <h4>Cadastrar Novo Hóspede</h4>
+                                <div class="form-group">
+                                    <label>Nome Completo:</label>
+                                    <input type="text" @bind="novoHospede.Nome" class="form-control" placeholder="Nome completo do hóspede" />
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Email:</label>
+                                        <input type="email" @bind="novoHospede.Email" class="form-control" placeholder="email@exemplo.com" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Telefone:</label>
+                                        <input type="tel" @bind="novoHospede.Telefone" class="form-control" placeholder="+55 11 98765-4321" />
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Documento:</label>
+                                        <input type="text" @bind="novoHospede.Documento" class="form-control" placeholder="CPF, RG ou Passaporte" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>País:</label>
+                                        <select @bind="novoHospede.Pais" class="form-control">
+                                            <option value="">Selecione</option>
+                                            <option value="Brasil">🇧🇷 Brasil</option>
+                                            <option value="Portugal">🇵🇹 Portugal</option>
+                                            <option value="Espanha">🇪🇸 Espanha</option>
+                                            <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
+                                            <option value="Reino Unido">🇬🇧 Reino Unido</option>
+                                            <option value="França">🇫🇷 França</option>
+                                            <option value="Alemanha">🇩🇪 Alemanha</option>
+                                            <option value="Itália">🇮🇹 Itália</option>
+                                            <option value="Argentina">🇦🇷 Argentina</option>
+                                            <option value="Chile">🇨🇱 Chile</option>
+                                            <option value="México">🇲🇽 México</option>
+                                            <option value="Canadá">🇨🇦 Canadá</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-sm btn-secondary" @onclick="CancelarNovoHospede" type="button">Cancelar</button>
+                                    <button class="btn btn-sm btn-success" @onclick="SalvarNovoHospede" type="button">💾 Salvar Hóspede</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <select @bind="reservaEdicao.HospedeId" class="form-control">
+                                <option value="0">Selecione um hóspede</option>
+                                @foreach (var hospede in HospedeService.ObterTodos())
+                                {
+                                    <option value="@hospede.Id">@hospede.Nome - @hospede.Email</option>
+                                }
+                            </select>
+                        }
                     </div>
                     
                     <div class="form-group">
@@ -245,6 +303,8 @@
     private string termoBusca = string.Empty;
     private bool mostrarModal = false;
     private Reserva reservaEdicao = new();
+    private bool mostrarFormNovoHospede = false;
+    private Hospede novoHospede = new();
 
     protected override void OnInitialized()
     {
@@ -307,6 +367,8 @@
             NumeroAdultos = 1,
             TipoPagamento = TipoPagamento.TransferenciaBancaria
         };
+        mostrarFormNovoHospede = false;
+        novoHospede = new();
         mostrarModal = true;
     }
 
@@ -329,7 +391,34 @@
             NumeroCriancas = reserva.NumeroCriancas,
             Observacoes = reserva.Observacoes
         };
+        mostrarFormNovoHospede = false;
+        novoHospede = new();
         mostrarModal = true;
+    }
+
+    private void SalvarNovoHospede()
+    {
+        if (string.IsNullOrWhiteSpace(novoHospede.Nome) || 
+            string.IsNullOrWhiteSpace(novoHospede.Email))
+        {
+            return;
+        }
+
+        novoHospede.DataCadastro = DateTime.Now;
+        HospedeService.AdicionarHospede(novoHospede);
+        
+        // Selecionar o hóspede recém-criado
+        reservaEdicao.HospedeId = novoHospede.Id;
+        
+        // Limpar e fechar formulário
+        mostrarFormNovoHospede = false;
+        novoHospede = new();
+    }
+
+    private void CancelarNovoHospede()
+    {
+        mostrarFormNovoHospede = false;
+        novoHospede = new();
     }
 
     private void CalcularValor()
@@ -405,7 +494,9 @@
     private void FecharModal()
     {
         mostrarModal = false;
+        mostrarFormNovoHospede = false;
         reservaEdicao = new();
+        novoHospede = new();
     }
 
     private string GetStatusClass(StatusReserva status)

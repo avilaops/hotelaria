@@ -803,396 +803,91 @@ main {
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
-.form-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+.form-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.form-group-header label {
+    margin-bottom: 0;
+}
+
+.form-group-header .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 1rem;
 }
 
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    font-size: 0.875rem;
-}
-
-/* Hospede Detalhes */
-.hospede-detalhes {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-.info-section h3 {
-    font-size: 1.125rem;
-    margin-bottom: 1rem;
     color: var(--text-dark);
+    font-size: 0.875rem;
 }
 
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.info-item .label {
-    color: var(--text-light);
-    font-size: 0.8125rem;
-}
-
-.info-item .value {
-    font-weight: 600;
-}
-
-.reservas-historico {
+.form-control {
     width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 1rem;
-}
-
-.reservas-historico th,
-.reservas-historico td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.reservas-historico thead {
-    background: var(--background);
-}
-
-.estatisticas-hospede {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    padding: 1rem;
-    background: var(--background);
-    border-radius: 6px;
-}
-
-.estatisticas-hospede .stat-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.estatisticas-hospede .label {
-    color: var(--text-light);
-    font-size: 0.875rem;
-}
-
-.estatisticas-hospede .value {
-    font-size: 1.25rem;
-    font-weight: 700;
-}
-
-/* Disponibilidade */
-.disponibilidade-container {
-    margin-bottom: 2rem;
-}
-
-.disponibilidade-container h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.quarto-card .quarto-image {
-    height: 180px;
-    background: var(--background);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.image-placeholder {
-    font-size: 4rem;
-}
-
-.quarto-card .quarto-content {
-    padding: 1rem;
-}
-
-.quarto-tipo {
-    color: var(--text-light);
-    font-size: 0.875rem;
-    margin-bottom: 1rem;
-}
-
-.quarto-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.detail-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.amenity-badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    background: var(--background);
+    padding: 0.625rem;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    font-size: 0.75rem;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
 }
 
-.preco-total {
-    border-top: 1px solid var(--border-color);
-    padding-top: 1rem;
-    margin-top: 1rem;
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 53, 128, 0.1);
 }
 
-.preco-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.preco-info .label {
-    font-weight: 500;
-}
-
-.preco-info .valor {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--success-color);
-}
-
-/* Calendário */
-.calendario-container {
-    background: var(--white);
+/* Formulário de Novo Hóspede */
+.novo-hospede-form {
+    background: #f8f9fa;
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: var(--shadow);
-    margin-top: 2rem;
-}
-
-.calendario-header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.calendario-header-section h2 {
-    margin: 0;
-    font-size: 1.25rem;
-}
-
-.calendario-navegacao {
-    display: flex;
-    gap: 1rem;
-}
-
-.calendario-wrapper {
-    overflow-x: auto;
     margin-bottom: 1rem;
-    -webkit-overflow-scrolling: touch;
+    border: 2px dashed var(--primary-color);
 }
 
-.calendario-scroll {
-    min-width: 100%;
-    overflow-x: auto;
-}
-
-.calendario-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 800px;
-}
-
-.calendario-table thead {
-    position: sticky;
-    top: 0;
-    background: var(--white);
-    z-index: 10;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.quarto-header {
-    position: sticky;
-    left: 0;
-    background: var(--background);
-    z-index: 11;
-    padding: 0.75rem;
-    font-weight: 600;
-    font-size: 0.875rem;
-    border-right: 2px solid var(--border-color);
-    min-width: 100px;
-}
-
-.dia-header {
-    padding: 0.5rem;
-    text-align: center;
-    font-weight: 600;
-    font-size: 0.75rem;
-    border-right: 1px solid var(--border-color);
-    min-width: 50px;
-}
-
-.dia-header.hoje {
-    background: var(--warning-color);
-    color: var(--text-dark);
-}
-
-.dia-numero {
+.novo-hospede-form h4 {
+    margin: 0 0 1rem 0;
+    color: var(--primary-color);
     font-size: 1rem;
-    font-weight: 700;
-}
-
-.dia-semana {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    color: var(--text-light);
-}
-
-.quarto-cell {
-    position: sticky;
-    left: 0;
-    padding: 0.75rem;
-    border-right: 2px solid var(--border-color);
-    background: var(--background);
-    z-index: 5;
-    min-width: 100px;
-}
-
-.quarto-info-cell {
-    display: flex;
-    flex-direction: column;
-}
-
-.quarto-info-cell strong {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-}
-
-.quarto-info-cell small {
-    font-size: 0.75rem;
-    color: var(--text-light);
-}
-
-.dia-cell {
-    padding: 0.5rem;
-    border-right: 1px solid var(--border-color);
-    border-bottom: 1px solid var(--border-color);
-    min-height: 60px;
-    font-size: 0.7rem;
-    text-align: center;
-    vertical-align: middle;
-    transition: background-color 0.2s;
-}
-
-.dia-cell:hover {
-    opacity: 0.8;
-}
-
-.dia-cell.disponivel {
-    background: #e8f5e9;
-}
-
-.dia-cell.ocupado {
-    background: #ffebee;
-    cursor: pointer;
-}
-
-.dia-cell.ocupado:hover {
-    background: #ffcdd2;
-}
-
-.dia-cell.manutencao {
-    background: #e3f2fd;
-}
-
-.dia-cell.hoje {
-    border: 2px solid var(--warning-color);
-}
-
-.reserva-info {
-    font-weight: 600;
-    color: var(--danger-color);
-    display: block;
-    padding: 0.25rem;
-    font-size: 0.75rem;
-}
-
-.legenda {
-    display: flex;
-    gap: 1.5rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-    flex-wrap: wrap;
-}
-
-.legenda-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.875rem;
 }
 
-.legenda-item .cor {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
+.novo-hospede-form h4::before {
+    content: "👤";
+    font-size: 1.25rem;
 }
 
-.legenda-item .cor.disponivel {
-    background: #e8f5e9;
+.novo-hospede-form .form-group {
+    margin-bottom: 1rem;
 }
 
-.legenda-item .cor.ocupado {
-    background: #ffebee;
-}
-
-.legenda-item .cor.manutencao {
-    background: #e3f2fd;
-}
-
-.legenda-item .cor.hoje {
-    background: var(--warning-color);
-}
-
-/* Modal de Detalhes da Reserva */
-.reserva-detalhes-grid {
+.novo-hospede-form .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-}
-
-.detalhe-section {
-    display: flex;
-    flex-direction: column;
     gap: 1rem;
 }
 
-.detalhe-section h3 {
-    font-size: 1.125rem;
-    margin-bottom: 0.5rem;
-    color: var(--text-dark);
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 0.5rem;
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
 }
 
 /* Responsive */
