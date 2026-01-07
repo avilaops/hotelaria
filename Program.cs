@@ -10,6 +10,7 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<ReservaService>();
 builder.Services.AddSingleton<QuartoService>();
 builder.Services.AddSingleton<HospedeService>();
+builder.Services.AddSingleton<ImportacaoService>();
 
 var app = builder.Build();
 

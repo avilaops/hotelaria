@@ -171,7 +171,16 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Documento:</label>
-                                        <input type="text" @bind="novoHospede.Documento" class="form-control" placeholder="CPF, RG ou Passaporte" />
+                                        <div class="input-with-select">
+                                            <input type="text" @bind="novoHospede.Documento" class="form-control" 
+                                                   placeholder="@GetPlaceholderDocumento()" />
+                                            <select @bind="tipoDocumento" class="form-select-inline">
+                                                <option value="CPF">CPF</option>
+                                                <option value="RG">RG/ID</option>
+                                                <option value="Passaporte">Passaporte</option>
+                                                <option value="CNH">CNH</option>
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <label>País:</label>
@@ -222,7 +231,7 @@
                     </div>
                 </div>
                 
-                <div class="form-row">
+                <div class="form-row form-row-3">
                     <div class="form-group">
                         <label>Check-in:</label>
                         <input type="date" @bind="reservaEdicao.CheckIn" @bind:event="oninput" class="form-control" />
@@ -232,21 +241,19 @@
                         <label>Check-out:</label>
                         <input type="date" @bind="reservaEdicao.CheckOut" @bind:event="oninput" class="form-control" />
                     </div>
-                </div>
-                
-                <div class="form-row">
+                    
                     <div class="form-group">
                         <label>Adultos:</label>
                         <input type="number" @bind="reservaEdicao.NumeroAdultos" class="form-control" min="1" />
                     </div>
-                    
+                </div>
+                
+                <div class="form-row form-row-3">
                     <div class="form-group">
                         <label>Crianças:</label>
                         <input type="number" @bind="reservaEdicao.NumeroCriancas" class="form-control" min="0" />
                     </div>
-                </div>
-                
-                <div class="form-row">
+                    
                     <div class="form-group">
                         <label>Status:</label>
                         <select @bind="reservaEdicao.Status" class="form-control">
@@ -270,7 +277,7 @@
                     </div>
                 </div>
                 
-                <div class="form-row">
+                <div class="form-row form-row-3">
                     <div class="form-group">
                         <label>Valor Total (€):</label>
                         <input type="number" step="0.01" @bind="reservaEdicao.ValorTotal" class="form-control" />
@@ -280,11 +287,11 @@
                         <label>Comissão (€):</label>
                         <input type="number" step="0.01" @bind="reservaEdicao.Comissao" class="form-control" />
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Observações:</label>
-                    <textarea @bind="reservaEdicao.Observacoes" class="form-control" rows="3"></textarea>
+                    
+                    <div class="form-group">
+                        <label>Observações:</label>
+                        <textarea @bind="reservaEdicao.Observacoes" class="form-control" rows="2"></textarea>
+                    </div>
                 </div>
             </div>
             
@@ -305,6 +312,7 @@
     private Reserva reservaEdicao = new();
     private bool mostrarFormNovoHospede = false;
     private Hospede novoHospede = new();
+    private string tipoDocumento = "CPF";
 
     protected override void OnInitialized()
     {
@@ -528,6 +536,18 @@
             StatusReserva.Cancelada => "Cancelada",
             StatusReserva.NoShow => "No Show",
             _ => ""
+        };
+    }
+
+    private string GetPlaceholderDocumento()
+    {
+        return tipoDocumento switch
+        {
+            "CPF" => "000.000.000-00",
+            "RG" => "00.000.000-0",
+            "Passaporte" => "AB123456",
+            "CNH" => "00000000000",
+            _ => "Número do documento"
         };
     }
 }
