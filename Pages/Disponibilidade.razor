@@ -1,6 +1,7 @@
 @page "/disponibilidade"
 @inject QuartoService QuartoService
 @inject ReservaService ReservaService
+@inject HospedeService HospedeService
 
 <PageTitle>Disponibilidade - Hotelaria</PageTitle>
 
@@ -90,50 +91,63 @@
 </div>
 
 <div class="calendario-container">
-    <h2>Calendário de Ocupação - @mesSelecionado.ToString("MMMM yyyy", new System.Globalization.CultureInfo("pt-BR"))</h2>
-    
-    <div class="calendario-navegacao">
-        <button class="btn btn-secondary" @onclick="MesAnterior">← Mês Anterior</button>
-        <button class="btn btn-secondary" @onclick="ProximoMes">Próximo Mês →</button>
+    <div class="calendario-header-section">
+        <h2>Calendário de Ocupação - @mesSelecionado.ToString("MMMM yyyy", new System.Globalization.CultureInfo("pt-BR"))</h2>
+        
+        <div class="calendario-navegacao">
+            <button class="btn btn-secondary" @onclick="MesAnterior">← Mês Anterior</button>
+            <button class="btn btn-secondary" @onclick="ProximoMes">Próximo Mês →</button>
+        </div>
     </div>
     
-    <div class="calendario-grid">
-        <div class="calendario-header">
-            <div class="header-cell">Quarto</div>
-            @for (int dia = 1; dia <= DateTime.DaysInMonth(mesSelecionado.Year, mesSelecionado.Month); dia++)
-            {
-                var data = new DateTime(mesSelecionado.Year, mesSelecionado.Month, dia);
-                <div class="header-cell @(data.Date == DateTime.Today ? "hoje" : "")">
-                    <div>@data.ToString("ddd", new System.Globalization.CultureInfo("pt-BR"))</div>
-                    <div>@dia</div>
-                </div>
-            }
-        </div>
-        
-        @foreach (var quarto in QuartoService.ObterTodos().OrderBy(q => q.Numero))
-        {
-            <div class="calendario-linha">
-                <div class="quarto-cell">
-                    <strong>@quarto.Numero</strong>
-                    <small>@GetTipoTexto(quarto.Tipo)</small>
-                </div>
-                
-                @for (int dia = 1; dia <= DateTime.DaysInMonth(mesSelecionado.Year, mesSelecionado.Month); dia++)
-                {
-                    var data = new DateTime(mesSelecionado.Year, mesSelecionado.Month, dia);
-                    var reserva = ObterReservaDia(quarto.Id, data);
-                    
-                    <div class="dia-cell @GetCelulaDiaClass(reserva, data)">
-                        @if (reserva != null && reserva.CheckIn.Date == data)
+    <div class="calendario-wrapper">
+        <div class="calendario-scroll">
+            <table class="calendario-table">
+                <thead>
+                    <tr>
+                        <th class="quarto-header">Quarto</th>
+                        @for (int dia = 1; dia <= DateTime.DaysInMonth(mesSelecionado.Year, mesSelecionado.Month); dia++)
                         {
-                            <span class="reserva-info" title="@reserva.Hospede?.Nome">
-                                @reserva.Hospede?.Nome?.Split(' ')[0]
-                            </span>
+                            var data = new DateTime(mesSelecionado.Year, mesSelecionado.Month, dia);
+                            <th class="dia-header @(data.Date == DateTime.Today ? "hoje" : "")">
+                                <div class="dia-numero">@dia</div>
+                                <div class="dia-semana">@data.ToString("ddd", new System.Globalization.CultureInfo("pt-BR"))</div>
+                            </th>
                         }
-                    </div>
-                }
-            </div>
-        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var quarto in QuartoService.ObterTodos().OrderBy(q => q.Numero))
+                    {
+                        <tr>
+                            <td class="quarto-cell">
+                                <div class="quarto-info-cell">
+                                    <strong>@quarto.Numero</strong>
+                                    <small>@GetTipoTexto(quarto.Tipo)</small>
+                                </div>
+                            </td>
+                            
+                            @for (int dia = 1; dia <= DateTime.DaysInMonth(mesSelecionado.Year, mesSelecionado.Month); dia++)
+                            {
+                                var data = new DateTime(mesSelecionado.Year, mesSelecionado.Month, dia);
+                                var reserva = ObterReservaDia(quarto.Id, data);
+                                
+                                <td class="dia-cell @GetCelulaDiaClass(reserva, data)" 
+                                    @onclick="() => AbrirDetalhesReserva(reserva)"
+                                    style="cursor: @(reserva != null ? "pointer" : "default")">
+                                    @if (reserva != null && reserva.CheckIn.Date == data)
+                                    {
+                                        <span class="reserva-info" title="@reserva.Hospede?.Nome - Click para editar">
+                                            @GetPrimeiroNome(reserva.Hospede?.Nome)
+                                        </span>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
     
     <div class="legenda">
@@ -152,6 +166,76 @@
     </div>
 </div>
 
+@if (mostrarModalReserva && reservaSelecionada != null)
+{
+    <div class="modal-overlay" @onclick="FecharModal">
+        <div class="modal-content large" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>Detalhes da Reserva #@reservaSelecionada.NumeroReserva</h2>
+                <button class="btn-close" @onclick="FecharModal">✖</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="reserva-detalhes-grid">
+                    <div class="detalhe-section">
+                        <h3>Informações da Reserva</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="label">Quarto:</span>
+                                <span class="value">@reservaSelecionada.Quarto?.Numero</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Check-in:</span>
+                                <span class="value">@reservaSelecionada.CheckIn.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Check-out:</span>
+                                <span class="value">@reservaSelecionada.CheckOut.ToString("dd/MM/yyyy")</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Status:</span>
+                                <span class="value">@GetStatusTexto(reservaSelecionada.Status)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detalhe-section">
+                        <h3>Hóspede</h3>
+                        @if (reservaSelecionada.Hospede != null)
+                        {
+                            <div class="form-group">
+                                <label>Nome:</label>
+                                <input type="text" @bind="hospedeEdicao.Nome" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>Email:</label>
+                                <input type="email" @bind="hospedeEdicao.Email" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>Telefone:</label>
+                                <input type="tel" @bind="hospedeEdicao.Telefone" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>Documento:</label>
+                                <input type="text" @bind="hospedeEdicao.Documento" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>País:</label>
+                                <input type="text" @bind="hospedeEdicao.Pais" class="form-control" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                <button class="btn btn-primary" @onclick="SalvarAlteracoesHospede">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<Quarto> quartosDisponiveis = new();
     private DateTime dataCheckIn = DateTime.Today.AddDays(1);
@@ -159,6 +243,10 @@
     private int capacidade = 2;
     private DateTime mesSelecionado = DateTime.Today;
     private List<Reserva> reservasMes = new();
+    
+    private bool mostrarModalReserva = false;
+    private Reserva? reservaSelecionada;
+    private Hospede hospedeEdicao = new();
 
     protected override void OnInitialized()
     {
@@ -205,6 +293,39 @@
             r.CheckOut.Date > data);
     }
 
+    private void AbrirDetalhesReserva(Reserva? reserva)
+    {
+        if (reserva != null && reserva.Hospede != null)
+        {
+            reservaSelecionada = reserva;
+            hospedeEdicao = new Hospede
+            {
+                Id = reserva.Hospede.Id,
+                Nome = reserva.Hospede.Nome,
+                Email = reserva.Hospede.Email,
+                Telefone = reserva.Hospede.Telefone,
+                Documento = reserva.Hospede.Documento,
+                Pais = reserva.Hospede.Pais,
+                DataCadastro = reserva.Hospede.DataCadastro
+            };
+            mostrarModalReserva = true;
+        }
+    }
+
+    private void SalvarAlteracoesHospede()
+    {
+        HospedeService.AtualizarHospede(hospedeEdicao);
+        FecharModal();
+        CarregarReservasMes();
+    }
+
+    private void FecharModal()
+    {
+        mostrarModalReserva = false;
+        reservaSelecionada = null;
+        hospedeEdicao = new();
+    }
+
     private string GetCelulaDiaClass(Reserva? reserva, DateTime data)
     {
         if (data.Date == DateTime.Today)
@@ -224,6 +345,28 @@
             TipoQuarto.Deluxe => "Deluxe",
             TipoQuarto.Suite => "Suíte",
             TipoQuarto.Presidential => "Presidential",
+            _ => ""
+        };
+    }
+
+    private string GetPrimeiroNome(string? nomeCompleto)
+    {
+        if (string.IsNullOrEmpty(nomeCompleto))
+            return "";
+        
+        return nomeCompleto.Split(' ')[0];
+    }
+
+    private string GetStatusTexto(StatusReserva status)
+    {
+        return status switch
+        {
+            StatusReserva.Confirmada => "Confirmada",
+            StatusReserva.Pendente => "Pendente",
+            StatusReserva.CheckInRealizado => "Check-in Realizado",
+            StatusReserva.CheckOutRealizado => "Check-out Realizado",
+            StatusReserva.Cancelada => "Cancelada",
+            StatusReserva.NoShow => "No Show",
             _ => ""
         };
     }

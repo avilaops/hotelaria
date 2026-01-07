@@ -981,63 +981,112 @@ main {
     padding: 1.5rem;
     border-radius: 8px;
     box-shadow: var(--shadow);
+    margin-top: 2rem;
 }
 
-.calendario-container h2 {
-    margin-bottom: 1rem;
+.calendario-header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.calendario-header-section h2 {
+    margin: 0;
+    font-size: 1.25rem;
 }
 
 .calendario-navegacao {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1.5rem;
 }
 
-.calendario-grid {
+.calendario-wrapper {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.calendario-scroll {
+    min-width: 100%;
     overflow-x: auto;
 }
 
-.calendario-header {
-    display: grid;
-    grid-template-columns: 120px repeat(auto-fill, 50px);
-    border-bottom: 2px solid var(--border-color);
+.calendario-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.calendario-table thead {
     position: sticky;
     top: 0;
     background: var(--white);
     z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.header-cell {
-    padding: 0.75rem 0.5rem;
+.quarto-header {
+    position: sticky;
+    left: 0;
+    background: var(--background);
+    z-index: 11;
+    padding: 0.75rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-right: 2px solid var(--border-color);
+    min-width: 100px;
+}
+
+.dia-header {
+    padding: 0.5rem;
     text-align: center;
     font-weight: 600;
     font-size: 0.75rem;
     border-right: 1px solid var(--border-color);
+    min-width: 50px;
 }
 
-.header-cell.hoje {
+.dia-header.hoje {
     background: var(--warning-color);
     color: var(--text-dark);
 }
 
-.calendario-linha {
-    display: grid;
-    grid-template-columns: 120px repeat(auto-fill, 50px);
-    border-bottom: 1px solid var(--border-color);
+.dia-numero {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.dia-semana {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-light);
 }
 
 .quarto-cell {
+    position: sticky;
+    left: 0;
     padding: 0.75rem;
-    border-right: 1px solid var(--border-color);
+    border-right: 2px solid var(--border-color);
     background: var(--background);
+    z-index: 5;
+    min-width: 100px;
 }
 
-.quarto-cell strong {
+.quarto-info-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.quarto-info-cell strong {
     display: block;
     font-weight: 600;
+    margin-bottom: 0.25rem;
 }
 
-.quarto-cell small {
+.quarto-info-cell small {
     font-size: 0.75rem;
     color: var(--text-light);
 }
@@ -1045,8 +1094,16 @@ main {
 .dia-cell {
     padding: 0.5rem;
     border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
     min-height: 60px;
     font-size: 0.7rem;
+    text-align: center;
+    vertical-align: middle;
+    transition: background-color 0.2s;
+}
+
+.dia-cell:hover {
+    opacity: 0.8;
 }
 
 .dia-cell.disponivel {
@@ -1055,6 +1112,11 @@ main {
 
 .dia-cell.ocupado {
     background: #ffebee;
+    cursor: pointer;
+}
+
+.dia-cell.ocupado:hover {
+    background: #ffcdd2;
 }
 
 .dia-cell.manutencao {
@@ -1068,6 +1130,9 @@ main {
 .reserva-info {
     font-weight: 600;
     color: var(--danger-color);
+    display: block;
+    padding: 0.25rem;
+    font-size: 0.75rem;
 }
 
 .legenda {
@@ -1076,6 +1141,7 @@ main {
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
 }
 
 .legenda-item {
@@ -1108,183 +1174,86 @@ main {
     background: var(--warning-color);
 }
 
-/* Financeiro */
-.pagamentos-lista,
-.quartos-receita {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.pagamento-item,
-.receita-item {
-    padding: 1rem;
-    background: var(--background);
-    border-radius: 6px;
-}
-
-.pagamento-info,
-.receita-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.tipo {
-    font-weight: 600;
-}
-
-.valor {
-    font-weight: 700;
-    color: var(--success-color);
-}
-
-.pagamento-barra {
-    height: 8px;
-    background: #e0e0e0;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.barra-progresso {
-    height: 100%;
-    background: var(--primary-color);
-    transition: width 0.3s;
-}
-
-.receita-detalhes {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.875rem;
-    color: var(--text-light);
-}
-
-.ticket-medio {
-    font-weight: 500;
-}
-
-.estatisticas-grid {
+/* Modal de Detalhes da Reserva */
+.reserva-detalhes-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.detalhe-section {
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
 }
 
-.estatistica-card {
-    padding: 1rem;
-    background: var(--background);
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.estatistica-card .label {
-    color: var(--text-light);
-    font-size: 0.875rem;
-}
-
-.estatistica-card .value {
-    font-size: 1.5rem;
-    font-weight: 700;
-}
-
-.top-hospedes {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.hospede-ranking {
-    display: flex;
-    justify-content: space-between;
-    padding: 1rem;
-    background: var(--background);
-    border-radius: 6px;
-}
-
-.hospede-nome {
-    font-weight: 600;
-}
-
-.hospede-valor {
-    font-weight: 700;
-    color: var(--success-color);
-}
-
-/* Utilitários */
-.no-data {
-    padding: 2rem;
-    text-align: center;
-    color: var(--text-light);
-}
-
-#blazor-error-ui {
-    background: var(--danger-color);
-    color: var(--white);
-    padding: 1rem;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1001;
-    display: none;
-}
-
-#blazor-error-ui .reload,
-#blazor-error-ui .dismiss {
-    color: var(--white);
-    text-decoration: underline;
-    cursor: pointer;
-    margin: 0 0.5rem;
+.detalhe-section h3 {
+    font-size: 1.125rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        position: relative;
-        height: auto;
-    }
-
-    main {
-        margin-left: 0;
-    }
-
-    .page-header {
+    .calendario-header-section {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
     }
 
-    .filters-section {
-        flex-direction: column;
-    }
-
-    .filter-group {
+    .calendario-navegacao {
         width: 100%;
+        justify-content: space-between;
     }
 
-    .stats-container {
+    .calendario-table {
+        font-size: 0.75rem;
+    }
+
+    .quarto-header,
+    .quarto-cell {
+        min-width: 80px;
+    }
+
+    .dia-header,
+    .dia-cell {
+        min-width: 40px;
+        padding: 0.25rem;
+    }
+
+    .dia-numero {
+        font-size: 0.875rem;
+    }
+
+    .dia-semana {
+        font-size: 0.65rem;
+    }
+
+    .reserva-info {
+        font-size: 0.65rem;
+    }
+
+    .reserva-detalhes-grid {
         grid-template-columns: 1fr;
     }
 
-    .dashboard-grid {
-        grid-template-columns: 1fr;
+    .legenda {
+        justify-content: space-around;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendario-container {
+        padding: 1rem;
     }
 
-    .form-row {
-        grid-template-columns: 1fr;
+    .calendario-header-section h2 {
+        font-size: 1rem;
     }
 
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .quartos-summary {
-        grid-template-columns: 1fr;
-    }
-
-    .quartos-grid {
-        grid-template-columns: 1fr;
+    .dia-header,
+    .dia-cell {
+        min-width: 35px;
     }
 }
