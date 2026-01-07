@@ -243,3 +243,25 @@ Contribuições são bem-vindas! Para contribuir:
 - [ ] Multi-idioma (i18n)
 
 > 📖 Veja o [CHANGELOG](CHANGELOG.md) para histórico de versões.
+
+### 6️⃣ **Relatórios Financeiros**
+✅ Dashboard completo:
+- Receita total, comissões, líquida
+- Taxa de ocupação e RevPAR
+- Receitas por tipo de pagamento
+- Receitas por tipo de quarto
+- Top 5 hóspedes
+- Transações recentes
+- Estatísticas detalhadas (diária média, tempo médio de estadia)
+
+### 7️⃣ **Importação de Dados**
+✅ **Novo!** Sistema completo de importação:
+- Upload de arquivos CSV/TSV (Excel)
+- Validação automática de dados
+- Preview antes de importar
+- Criação automática de hóspedes e quartos
+- Tratamento de erros linha por linha
+- Suporte para múltiplos formatos de data e moeda
+- [Ver Guia Completo](docs/IMPORTACAO.md)
+
+---
