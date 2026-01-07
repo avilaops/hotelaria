@@ -890,7 +890,342 @@ main {
     border-top: 1px solid var(--border-color);
 }
 
+/* Disponibilidade */
+.disponibilidade-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.search-section,
+.calendario-section {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.search-section h2,
+.calendario-section h2 {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-dark);
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Tipo Badges */
+.tipo-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tipo-badge.standard {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.tipo-badge.deluxe {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.tipo-badge.suite {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.tipo-badge.presidential {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+/* Calendário */
+.calendario-section {
+    margin-top: 0;
+}
+
+.calendario-header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.calendario-header-section h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    text-transform: capitalize;
+}
+
+.calendario-navegacao {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.calendario-wrapper {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.calendario-scroll {
+    min-width: 100%;
+    overflow-x: auto;
+}
+
+.calendario-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 800px;
+}
+
+.calendario-table thead {
+    position: sticky;
+    top: 0;
+    background: var(--background);
+    z-index: 10;
+}
+
+.quarto-header {
+    position: sticky;
+    left: 0;
+    background: var(--background);
+    z-index: 11;
+    padding: 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-right: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    min-width: 120px;
+    text-align: left;
+}
+
+.dia-header {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.75rem;
+    border-right: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    min-width: 50px;
+    background: var(--background);
+}
+
+.dia-header.hoje {
+    background: #fff9c4;
+    color: var(--text-dark);
+}
+
+.dia-numero {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.dia-semana {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+}
+
+.quarto-cell {
+    position: sticky;
+    left: 0;
+    padding: 1rem;
+    border-right: 2px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--white);
+    z-index: 5;
+    min-width: 120px;
+}
+
+.quarto-info-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.quarto-info-cell strong {
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+}
+
+.quarto-info-cell small {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.dia-cell {
+    padding: 0.75rem 0.5rem;
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    min-height: 70px;
+    font-size: 0.7rem;
+    text-align: center;
+    vertical-align: middle;
+    transition: all 0.2s;
+    background: var(--white);
+}
+
+.dia-cell:hover {
+    opacity: 0.85;
+    transform: scale(1.02);
+}
+
+.dia-cell.disponivel {
+    background: #e8f5e9;
+}
+
+.dia-cell.ocupado {
+    background: #ffebee;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.dia-cell.ocupado:hover {
+    background: #ffcdd2;
+}
+
+.dia-cell.limpeza {
+    background: #fff9c4;
+}
+
+.dia-cell.manutencao {
+    background: #e3f2fd;
+}
+
+.dia-cell.hoje {
+    border: 2px solid #fbc02d;
+    box-shadow: inset 0 0 0 1px #fbc02d;
+}
+
+.reserva-info {
+    font-weight: 700;
+    color: #c62828;
+    display: block;
+    padding: 0.25rem;
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+}
+
+.legenda {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    background: var(--background);
+    border-radius: 6px;
+}
+
+.legenda-item .cor {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.legenda-item .cor.disponivel {
+    background: #e8f5e9;
+}
+
+.legenda-item .cor.ocupado {
+    background: #ffebee;
+}
+
+.legenda-item .cor.limpeza {
+    background: #fff9c4;
+}
+
+.legenda-item .cor.manutencao {
+    background: #e3f2fd;
+}
+
+.legenda-item .cor.hoje {
+    background: #fff9c4;
+    border: 2px solid #fbc02d;
+}
+
+/* Modal de Detalhes */
+.reserva-detalhes-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.detalhe-card {
+    padding: 1.5rem;
+    background: var(--background);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.detalhe-card h3 {
+    font-size: 1.125rem;
+    margin: 0 0 1rem 0;
+    color: var(--text-dark);
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.info-grid .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-grid .info-item .label {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.info-grid .info-item .value {
+    font-size: 1rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
 /* Responsive */
+@media (max-width: 1024px) {
+    .reserva-detalhes-container {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 768px) {
     .calendario-header-section {
         flex-direction: column;
@@ -902,23 +1237,29 @@ main {
         justify-content: space-between;
     }
 
-    .calendario-table {
+    .calendario-navegacao .btn {
         font-size: 0.75rem;
+        padding: 0.5rem;
+    }
+
+    .calendario-table {
+        font-size: 0.7rem;
     }
 
     .quarto-header,
     .quarto-cell {
-        min-width: 80px;
+        min-width: 90px;
+        padding: 0.75rem 0.5rem;
     }
 
     .dia-header,
     .dia-cell {
-        min-width: 40px;
-        padding: 0.25rem;
+        min-width: 45px;
+        padding: 0.5rem 0.25rem;
     }
 
     .dia-numero {
-        font-size: 0.875rem;
+        font-size: 0.9rem;
     }
 
     .dia-semana {
@@ -927,19 +1268,31 @@ main {
 
     .reserva-info {
         font-size: 0.65rem;
-    }
-
-    .reserva-detalhes-grid {
-        grid-template-columns: 1fr;
+        padding: 0.2rem;
     }
 
     .legenda {
         justify-content: space-around;
+        gap: 0.75rem;
+    }
+
+    .legenda-item {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.75rem;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 480px) {
-    .calendario-container {
+    .disponibilidade-sections {
+        gap: 1rem;
+    }
+
+    .search-section,
+    .calendario-section {
         padding: 1rem;
     }
 
@@ -949,6 +1302,7 @@ main {
 
     .dia-header,
     .dia-cell {
-        min-width: 35px;
+        min-width: 38px;
+        padding: 0.4rem 0.2rem;
     }
 }
