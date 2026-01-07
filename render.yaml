@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: hotelaria
+    runtime: docker
+    repo: https://github.com/avilaops/hotelaria
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:$PORT
+    autoDeploy: true

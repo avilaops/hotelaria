@@ -1,0 +1,453 @@
+@page "/usuarios"
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Gestão de Usuários - Hotelaria</PageTitle>
+
+<div class="page-header">
+    <h1>👥 Gestão de Usuários</h1>
+    <div class="header-actions">
+        <button class="btn btn-primary" @onclick="() => AbrirModal(null)">
+            ➕ Novo Usuário
+        </button>
+    </div>
+</div>
+
+<!-- Filtros e Busca -->
+<div class="filters-section">
+    <div class="filter-group search">
+        <label>Buscar:</label>
+        <input type="text" @bind="TermoBusca" placeholder="Nome, usuário ou email..." class="form-control" />
+    </div>
+    
+    <div class="filter-group">
+        <label>Perfil:</label>
+        <select @bind="PerfilFiltro" class="form-control">
+            <option value="">Todos</option>
+            @foreach (var perfil in Enum.GetValues<PerfilUsuario>())
+            {
+                <option value="@perfil">@AuthService.ObterNomePerfil(perfil)</option>
+            }
+        </select>
+    </div>
+</div>
+
+<!-- Lista de Usuários -->
+<div class="usuarios-grid">
+    @if (usuariosFiltrados.Any())
+    {
+        @foreach (var usuario in usuariosFiltrados)
+        {
+            <div class="usuario-card @(usuario.Ativo ? "" : "inativo")">
+                <div class="usuario-avatar">
+                    @if (!string.IsNullOrEmpty(usuario.Foto))
+                    {
+                        <img src="@usuario.Foto" alt="@usuario.Nome" />
+                    }
+                    else
+                    {
+                        <div class="avatar-placeholder">
+                            @GetIniciais(usuario.Nome)
+                        </div>
+                    }
+                </div>
+
+                <div class="usuario-info">
+                    <h3>@usuario.Nome</h3>
+                    <p class="username">@@@usuario.Username</p>
+                    <p class="email">@usuario.Email</p>
+                    
+                    <div class="usuario-badges">
+                        <span class="badge perfil-@usuario.Perfil.ToString().ToLower()">
+                            @AuthService.ObterNomePerfil(usuario.Perfil)
+                        </span>
+                        @if (!usuario.Ativo)
+                        {
+                            <span class="badge badge-inactive">Inativo</span>
+                        }
+                        @if (usuario.Id == AuthService.ObterUsuarioAtual()?.Id)
+                        {
+                            <span class="badge badge-current">Você</span>
+                        }
+                    </div>
+
+                    <div class="usuario-meta">
+                        <span class="meta-item">
+                            <span class="icon">📅</span>
+                            Criado: @usuario.DataCriacao.ToString("dd/MM/yyyy")
+                        </span>
+                        @if (usuario.UltimoAcesso.HasValue)
+                        {
+                            <span class="meta-item">
+                                <span class="icon">🕒</span>
+                                Último acesso: @usuario.UltimoAcesso.Value.ToString("dd/MM/yyyy HH:mm")
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="usuario-actions">
+                    <button class="btn btn-sm btn-secondary" @onclick="() => AbrirModal(usuario)">
+                        ✏️ Editar
+                    </button>
+                    @if (usuario.Id != AuthService.ObterUsuarioAtual()?.Id)
+                    {
+                        <button class="btn btn-sm btn-danger" @onclick="() => ExcluirUsuario(usuario)">
+                            🗑️ Excluir
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="no-data">
+            <p>😔 Nenhum usuário encontrado.</p>
+        </div>
+    }
+</div>
+
+<!-- Modal de Criar/Editar Usuário -->
+@if (mostrarModal)
+{
+    <div class="modal-overlay" @onclick="FecharModal">
+        <div class="modal-content large" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>@(usuarioEdicao.Id == 0 ? "➕ Novo Usuário" : "✏️ Editar Usuário")</h2>
+                <button class="btn-close" @onclick="FecharModal">✖</button>
+            </div>
+
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(mensagemErro))
+                {
+                    <div class="alert alert-error">
+                        <span class="icon">⚠️</span>
+                        <span>@mensagemErro</span>
+                    </div>
+                }
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome Completo:</label>
+                        <input type="text" @bind="usuarioEdicao.Nome" class="form-control" placeholder="Nome completo" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nome de Usuário:</label>
+                        <input type="text" @bind="usuarioEdicao.Username" class="form-control" placeholder="username" />
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" @bind="usuarioEdicao.Email" class="form-control" placeholder="email@exemplo.com" />
+                    </div>
+                </div>
+
+                @if (usuarioEdicao.Id == 0)
+                {
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Senha:</label>
+                            <input type="password" @bind="novaSenha" class="form-control" placeholder="Digite a senha" />
+                        </div>
+                        <div class="form-group">
+                            <label>Confirmar Senha:</label>
+                            <input type="password" @bind="confirmarSenha" class="form-control" placeholder="Confirme a senha" />
+                        </div>
+                    </div>
+                }
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Perfil:</label>
+                        <select @bind="usuarioEdicao.Perfil" class="form-control">
+                            @foreach (var perfil in Enum.GetValues<PerfilUsuario>())
+                            {
+                                <option value="@perfil">@AuthService.ObterNomePerfil(perfil)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status:</label>
+                        <select @bind="usuarioEdicao.Ativo" class="form-control">
+                            <option value="true">Ativo</option>
+                            <option value="false">Inativo</option>
+                        </select>
+                    </div>
+                </div>
+
+                @if (usuarioEdicao.Id != 0)
+                {
+                    <div class="form-group">
+                        <button class="btn btn-secondary btn-sm" @onclick="() => mostrarAlterarSenha = !mostrarAlterarSenha">
+                            🔒 Redefinir Senha
+                        </button>
+                    </div>
+
+                    @if (mostrarAlterarSenha)
+                    {
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nova Senha:</label>
+                                <input type="password" @bind="novaSenha" class="form-control" placeholder="Nova senha" />
+                            </div>
+                            <div class="form-group">
+                                <label>Confirmar Senha:</label>
+                                <input type="password" @bind="confirmarSenha" class="form-control" placeholder="Confirme a senha" />
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                <button class="btn btn-primary" @onclick="SalvarUsuario">💾 Salvar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Usuario> usuariosFiltrados = new();
+    private string termoBusca = string.Empty;
+    private string perfilFiltro = string.Empty;
+
+    private string TermoBusca
+    {
+        get => termoBusca;
+        set
+        {
+            termoBusca = value;
+            BuscarUsuarios();
+        }
+    }
+
+    private string PerfilFiltro
+    {
+        get => perfilFiltro;
+        set
+        {
+            perfilFiltro = value;
+            FiltrarUsuarios();
+        }
+    }
+
+    private bool mostrarModal = false;
+    private Usuario usuarioEdicao = new();
+    private string novaSenha = string.Empty;
+    private string confirmarSenha = string.Empty;
+    private bool mostrarAlterarSenha = false;
+    private string mensagemErro = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        // Verificar se está autenticado e tem permissão
+        if (!AuthService.EstaAutenticado())
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        if (!AuthService.TemPermissao(PerfilUsuario.Gerente))
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        CarregarUsuarios();
+    }
+
+    private void CarregarUsuarios()
+    {
+        usuariosFiltrados = AuthService.ObterTodos().OrderBy(u => u.Nome).ToList();
+    }
+
+    private void BuscarUsuarios()
+    {
+        if (string.IsNullOrWhiteSpace(termoBusca))
+        {
+            CarregarUsuarios();
+        }
+        else
+        {
+            usuariosFiltrados = AuthService.BuscarUsuarios(termoBusca);
+        }
+
+        FiltrarPorPerfil();
+        StateHasChanged();
+    }
+
+    private void FiltrarUsuarios()
+    {
+        BuscarUsuarios();
+    }
+
+    private void FiltrarPorPerfil()
+    {
+        if (!string.IsNullOrWhiteSpace(perfilFiltro) && Enum.TryParse<PerfilUsuario>(perfilFiltro, out var perfil))
+        {
+            usuariosFiltrados = usuariosFiltrados.Where(u => u.Perfil == perfil).ToList();
+        }
+    }
+
+    private void AbrirModal(Usuario? usuario)
+    {
+        mensagemErro = string.Empty;
+        novaSenha = string.Empty;
+        confirmarSenha = string.Empty;
+        mostrarAlterarSenha = false;
+
+        if (usuario == null)
+        {
+            usuarioEdicao = new Usuario
+            {
+                Perfil = PerfilUsuario.Recepcionista,
+                Ativo = true
+            };
+        }
+        else
+        {
+            usuarioEdicao = new Usuario
+            {
+                Id = usuario.Id,
+                Nome = usuario.Nome,
+                Email = usuario.Email,
+                Username = usuario.Username,
+                SenhaHash = usuario.SenhaHash,
+                Perfil = usuario.Perfil,
+                Ativo = usuario.Ativo,
+                DataCriacao = usuario.DataCriacao,
+                UltimoAcesso = usuario.UltimoAcesso
+            };
+        }
+
+        mostrarModal = true;
+    }
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+        usuarioEdicao = new();
+        mensagemErro = string.Empty;
+    }
+
+    private void SalvarUsuario()
+    {
+        mensagemErro = string.Empty;
+
+        // Validações
+        if (string.IsNullOrWhiteSpace(usuarioEdicao.Nome))
+        {
+            mensagemErro = "Nome é obrigatório";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(usuarioEdicao.Username))
+        {
+            mensagemErro = "Nome de usuário é obrigatório";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(usuarioEdicao.Email))
+        {
+            mensagemErro = "Email é obrigatório";
+            return;
+        }
+
+        // Validar senha apenas para novo usuário
+        if (usuarioEdicao.Id == 0)
+        {
+            if (string.IsNullOrWhiteSpace(novaSenha))
+            {
+                mensagemErro = "Senha é obrigatória";
+                return;
+            }
+
+            if (novaSenha != confirmarSenha)
+            {
+                mensagemErro = "As senhas não conferem";
+                return;
+            }
+
+            if (novaSenha.Length < 6)
+            {
+                mensagemErro = "A senha deve ter no mínimo 6 caracteres";
+                return;
+            }
+
+            usuarioEdicao.SenhaHash = AuthService.HashSenha(novaSenha);
+        }
+        else if (mostrarAlterarSenha)
+        {
+            // Redefinir senha de usuário existente
+            if (!string.IsNullOrWhiteSpace(novaSenha))
+            {
+                if (novaSenha != confirmarSenha)
+                {
+                    mensagemErro = "As senhas não conferem";
+                    return;
+                }
+
+                if (novaSenha.Length < 6)
+                {
+                    mensagemErro = "A senha deve ter no mínimo 6 caracteres";
+                    return;
+                }
+
+                AuthService.RedefinirSenha(usuarioEdicao.Id, novaSenha);
+            }
+        }
+
+        bool sucesso;
+        if (usuarioEdicao.Id == 0)
+        {
+            sucesso = AuthService.AdicionarUsuario(usuarioEdicao);
+            if (!sucesso)
+            {
+                mensagemErro = "Nome de usuário já existe";
+                return;
+            }
+        }
+        else
+        {
+            sucesso = AuthService.AtualizarUsuario(usuarioEdicao);
+            if (!sucesso)
+            {
+                mensagemErro = "Erro ao atualizar usuário";
+                return;
+            }
+        }
+
+        FecharModal();
+        CarregarUsuarios();
+    }
+
+    private void ExcluirUsuario(Usuario usuario)
+    {
+        if (confirm($"Deseja realmente excluir o usuário {usuario.Nome}?"))
+        {
+            var sucesso = AuthService.RemoverUsuario(usuario.Id);
+            if (sucesso)
+            {
+                CarregarUsuarios();
+            }
+        }
+    }
+
+    private bool confirm(string message)
+    {
+        // Em produção, usar JS Interop para confirm
+        return true;
+    }
+
+    private string GetIniciais(string nome)
+    {
+        var partes = nome.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 0) return "?";
+        if (partes.Length == 1) return partes[0].Substring(0, Math.Min(2, partes[0].Length)).ToUpper();
+        return $"{partes[0][0]}{partes[^1][0]}".ToUpper();
+    }
+}

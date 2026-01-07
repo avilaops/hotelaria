@@ -1,0 +1,89 @@
+@page "/relatorios"
+@inject RelatorioService RelatorioService
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+<PageTitle>Relatórios Detalhados - Hotelaria</PageTitle>
+
+@code {
+    private List<ReservaDetalhada> reservas = new();
+    private RelatorioEstatisticas? estatisticas;
+    
+    private DateTime? dataInicio;
+    private DateTime? dataFim;
+    private string statusFiltro = "";
+    private string numeroReserva = "";
+
+    protected override void OnInitialized()
+    {
+        // Verificar autenticação
+        if (!AuthService.EstaAutenticado())
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        // Apenas Gerente+ pode ver relatórios detalhados
+        if (!AuthService.TemPermissao(PerfilUsuario.Gerente))
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Carregar dados do mês atual por padrão
+        dataInicio = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        dataFim = dataInicio.Value.AddMonths(1).AddDays(-1);
+        CarregarDados();
+    }
+
+    private void CarregarDados()
+    {
+        StatusReserva? status = null;
+        if (!string.IsNullOrWhiteSpace(statusFiltro))
+        {
+            Enum.TryParse<StatusReserva>(statusFiltro, out var statusParsed);
+            status = statusParsed;
+        }
+
+        reservas = RelatorioService.ObterReservasDetalhadas(
+            dataInicio, 
+            dataFim, 
+            status, 
+            numeroReserva
+        );
+
+        estatisticas = RelatorioService.ObterEstatisticas(dataInicio, dataFim);
+    }
+
+    private void AplicarFiltros()
+    {
+        CarregarDados();
+    }
+
+    private void LimparFiltros()
+    {
+        dataInicio = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        dataFim = dataInicio.Value.AddMonths(1).AddDays(-1);
+        statusFiltro = "";
+        numeroReserva = "";
+        CarregarDados();
+    }
+
+    private async Task ExportarCSV()
+    {
+        try
+        {
+            var csv = RelatorioService.ExportarParaCSV(reservas);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+            var base64 = Convert.ToBase64String(bytes);
+            var fileName = $"relatorio_reservas_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            
+            await JS.InvokeVoidAsync("downloadFile", fileName, base64);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao exportar CSV: {ex.Message}");
+        }
+    }
+}

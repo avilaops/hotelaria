@@ -11,6 +11,13 @@ builder.Services.AddSingleton<ReservaService>();
 builder.Services.AddSingleton<QuartoService>();
 builder.Services.AddSingleton<HospedeService>();
 builder.Services.AddSingleton<ImportacaoService>();
+builder.Services.AddSingleton<RelatorioService>();
+builder.Services.AddSingleton<AuthService>();
+builder.Services.AddSingleton<ConfigurationService>();
+builder.Services.AddHttpClient<PayPalService>();
+builder.Services.AddHttpClient<AirbnbService>();
+builder.Services.AddHttpClient<SentryService>();
+builder.Services.AddSingleton<MongoDBService>();
 
 var app = builder.Build();
 

@@ -1,0 +1,157 @@
+@page "/login"
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Login - Hotelaria</PageTitle>
+
+<div class="login-container">
+    <div class="login-content">
+        <!-- Logo e Header Minimalista -->
+        <div class="login-brand">
+            <div class="brand-icon">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 40V16L24 8L40 16V40H28V28H20V40H8Z" fill="currentColor"/>
+                </svg>
+            </div>
+            <h1>Hotelaria</h1>
+        </div>
+
+        <!-- Formulário Minimalista -->
+        <div class="login-form">
+            @if (!string.IsNullOrEmpty(mensagemErro))
+            {
+                <div class="alert-minimal">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm1 12H7V7h2v5zm0-6H7V4h2v2z"/>
+                    </svg>
+                    <span>@mensagemErro</span>
+                </div>
+            }
+
+            <div class="input-group">
+                <input type="text" 
+                       @bind="loginModel.Username" 
+                       @bind:event="oninput"
+                       @onkeydown="HandleKeyDown"
+                       placeholder="Usuário"
+                       class="input-minimal"
+                       autofocus />
+            </div>
+
+            <div class="input-group">
+                <input type="password" 
+                       @bind="loginModel.Senha" 
+                       @bind:event="oninput"
+                       @onkeydown="HandleKeyDown"
+                       placeholder="Senha"
+                       class="input-minimal" />
+            </div>
+
+            <button class="btn-primary-minimal" @onclick="RealizarLogin" disabled="@processando">
+                @if (processando)
+                {
+                    <span class="spinner-minimal"></span>
+                }
+                else
+                {
+                    <span>Entrar</span>
+                }
+            </button>
+
+            <label class="checkbox-minimal">
+                <input type="checkbox" @bind="loginModel.LembrarMe" />
+                <span>Permanecer conectado</span>
+            </label>
+        </div>
+
+        <!-- Credenciais de Teste - Discretas -->
+        <div class="test-credentials">
+            <div class="credentials-header">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M6 0C2.7 0 0 2.7 0 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm.5 9.5h-1V5h1v4.5zm0-5.5h-1V3h1v1z"/>
+                </svg>
+                <span>Credenciais de teste</span>
+            </div>
+            <div class="credentials-list">
+                <div class="credential">
+                    <span class="role">Admin</span>
+                    <span class="separator">·</span>
+                    <code>admin / admin123</code>
+                </div>
+                <div class="credential">
+                    <span class="role">Gerente</span>
+                    <span class="separator">·</span>
+                    <code>maria / maria123</code>
+                </div>
+                <div class="credential">
+                    <span class="role">Recepcionista</span>
+                    <span class="separator">·</span>
+                    <code>joao / joao123</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Minimalista -->
+    <div class="login-footer">
+        <span>© 2026 Hotelaria</span>
+        <span class="separator">·</span>
+        <span>v2.5.0</span>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string mensagemErro = string.Empty;
+    private bool processando = false;
+
+    protected override void OnInitialized()
+    {
+        if (AuthService.EstaAutenticado())
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task RealizarLogin()
+    {
+        mensagemErro = string.Empty;
+        processando = true;
+
+        if (string.IsNullOrWhiteSpace(loginModel.Username))
+        {
+            mensagemErro = "Por favor, informe o usuário";
+            processando = false;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(loginModel.Senha))
+        {
+            mensagemErro = "Por favor, informe a senha";
+            processando = false;
+            return;
+        }
+
+        await Task.Delay(500);
+
+        var sucesso = AuthService.Login(loginModel.Username, loginModel.Senha);
+
+        if (sucesso)
+        {
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+        else
+        {
+            mensagemErro = "Credenciais inválidas";
+            processando = false;
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !processando)
+        {
+            await RealizarLogin();
+        }
+    }
+}

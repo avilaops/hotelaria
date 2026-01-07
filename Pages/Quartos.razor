@@ -1,7 +1,9 @@
 @page "/quartos"
 @inject QuartoService QuartoService
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
 
-<PageTitle>Quartos - Hotelaria</PageTitle>
+<PageTitle>Gestão de Quartos - Hotelaria</PageTitle>
 
 <div class="page-header">
     <h1>Gerenciamento de Quartos</h1>
@@ -160,6 +162,20 @@
 
     protected override void OnInitialized()
     {
+        // Verificar autenticação
+        if (!AuthService.EstaAutenticado())
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        // Verificar permissão (Gerente ou superior pode gerenciar quartos)
+        if (!AuthService.TemPermissao(PerfilUsuario.Gerente))
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
         CarregarQuartos();
     }
 

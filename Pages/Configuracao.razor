@@ -1,0 +1,224 @@
+@page "/configuracao"
+@inject NavigationManager NavigationManager
+@inject AuthService AuthService
+
+<PageTitle>Configurações - Hotelaria</PageTitle>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Verificar autenticação
+        if (!AuthService.EstaAutenticado())
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        // Todos podem acessar configuração, mas cards específicos têm suas próprias proteções
+    }
+}
+
+<div class="page-header">
+    <h1>⚙️ Configurações</h1>
+</div>
+
+<div class="configuracao-container">
+    <!-- Gestão de Dados -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon">🏢</div>
+            <div class="section-info">
+                <h2>Gestão de Dados</h2>
+                <p>Configure e gerencie os dados básicos do sistema</p>
+            </div>
+        </div>
+
+        <div class="config-cards">
+            <div class="config-card" @onclick='() => NavigationManager.NavigateTo("/quartos")'>
+                <div class="card-icon">🛏️</div>
+                <div class="card-content">
+                    <h3>Quartos</h3>
+                    <p>Gerencie quartos, vagas e preços</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+
+            <div class="config-card disabled">
+                <div class="card-icon">💰</div>
+                <div class="card-content">
+                    <h3>Preços e Taxas</h3>
+                    <p>Configure preços dinâmicos e taxas</p>
+                    <span class="badge-soon">Em breve</span>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+
+            <div class="config-card disabled">
+                <div class="card-icon">📋</div>
+                <div class="card-content">
+                    <h3>Políticas</h3>
+                    <p>Defina políticas de cancelamento e check-in</p>
+                    <span class="badge-soon">Em breve</span>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sistema -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon">⚙️</div>
+            <div class="section-info">
+                <h2>Sistema</h2>
+                <p>Configurações gerais do sistema</p>
+            </div>
+        </div>
+
+        <div class="config-cards">
+            <div class="config-card" @onclick='() => NavigationManager.NavigateTo("/usuarios")'>
+                <div class="card-icon">👤</div>
+                <div class="card-content">
+                    <h3>Usuários e Permissões</h3>
+                    <p>Gerencie usuários e níveis de acesso</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+
+            <div class="config-card disabled">
+                <div class="card-icon">🌐</div>
+                <div class="card-content">
+                    <h3>Idioma e Região</h3>
+                    <p>Configure idioma, moeda e fuso horário</p>
+                    <span class="badge-soon">Em breve</span>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+
+            <div class="config-card disabled">
+                <div class="card-icon">🔔</div>
+                <div class="card-content">
+                    <h3>Notificações</h3>
+                    <p>Configure alertas e notificações</p>
+                    <span class="badge-soon">Em breve</span>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integrações -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon">🔌</div>
+            <div class="section-info">
+                <h2>Integrações</h2>
+                <p>Conecte com serviços externos</p>
+            </div>
+        </div>
+
+        <div class="config-cards">
+            <div class="config-card" @onclick='() => NavigationManager.NavigateTo("/integracoes")'>
+                <div class="card-icon">🔐</div>
+                <div class="card-content">
+                    <h3>APIs e Serviços</h3>
+                    <p>PayPal, MongoDB, Airbnb, Sentry</p>
+                    <span class="badge-config">Área Restrita</span>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+
+            <div class="config-card disabled">
+                <div class="card-icon">📡</div>
+                <div class="card-content">
+                    <h3>Webhooks</h3>
+                    <p>Configure eventos e notificações</p>
+                    <span class="badge-soon">Em breve</span>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+
+            <div class="config-card disabled">
+                <div class="card-icon">🔄</div>
+                <div class="card-content">
+                    <h3>Sincronização</h3>
+                    <p>Sync automático entre plataformas</p>
+                    <span class="badge-soon">Em breve</span>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dados e Backup -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon">💾</div>
+            <div class="section-info">
+                <h2>Dados e Backup</h2>
+                <p>Gerencie seus dados e backups</p>
+            </div>
+        </div>
+
+        <div class="config-cards">
+            <div class="config-card" @onclick='() => NavigationManager.NavigateTo("/importar")'>
+                <div class="card-icon">📥</div>
+                <div class="card-content">
+                    <h3>Importar Dados</h3>
+                    <p>Importe reservas de arquivos CSV/TSV</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+
+            <div class="config-card disabled">
+                <div class="card-icon">📤</div>
+                <div class="card-content">
+                    <h3>Exportar Dados</h3>
+                    <p>Exporte todos os dados do sistema</p>
+                    <span class="badge-soon">Em breve</span>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+
+            <div class="config-card disabled">
+                <div class="card-icon">🔄</div>
+                <div class="card-content">
+                    <h3>Backup Automático</h3>
+                    <p>Configure backups periódicos</p>
+                    <span class="badge-soon">Em breve</span>
+                </div>
+                <div class="card-arrow">→</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Sistema -->
+    <div class="config-section">
+        <div class="section-header">
+            <div class="section-icon">ℹ️</div>
+            <div class="section-info">
+                <h2>Informações do Sistema</h2>
+                <p>Versão e detalhes técnicos</p>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Versão:</span>
+                <span class="info-value">2.5.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Ambiente:</span>
+                <span class="info-value">Desenvolvimento</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Tecnologia:</span>
+                <span class="info-value">Blazor Server (.NET 8)</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Última Atualização:</span>
+                <span class="info-value">07/01/2026</span>
+            </div>
+        </div>
+    </div>
+</div>

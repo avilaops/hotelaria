@@ -1,4 +1,7 @@
 @inherits LayoutComponentBase
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@implements IDisposable
 
 <div class="page">
     <div class="sidebar">
@@ -20,11 +23,6 @@
                 </NavLink>
             </div>
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="quartos">
-                    <span class="icon">🛏️</span> Quartos
-                </NavLink>
-            </div>
-            <div class="nav-item px-3">
                 <NavLink class="nav-link" href="hospedes">
                     <span class="icon">👥</span> Hóspedes
                 </NavLink>
@@ -40,18 +38,43 @@
                 </NavLink>
             </div>
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="importar">
-                    <span class="icon">📥</span> Importar Dados
+                <NavLink class="nav-link" href="relatorios">
+                    <span class="icon">📊</span> Relatórios
                 </NavLink>
             </div>
         </nav>
+
+        <!-- Botão de Configuração no Rodapé -->
+        <div class="sidebar-footer">
+            <NavLink class="config-button" href="configuracao">
+                <span class="icon">⚙️</span>
+                <span class="text">Configurações</span>
+            </NavLink>
+        </div>
     </div>
 
     <main>
         <div class="top-row px-4">
-            <span class="user-info">
-                <span class="icon">👤</span> Administrador
-            </span>
+            @if (AuthService.EstaAutenticado())
+            {
+                var usuario = AuthService.ObterUsuarioAtual();
+                <div class="user-menu">
+                    <span class="user-info">
+                        <span class="icon">👤</span> 
+                        <span class="user-name">@usuario?.Nome</span>
+                        <span class="user-perfil">(@AuthService.ObterNomePerfil(usuario?.Perfil ?? PerfilUsuario.Visualizador))</span>
+                    </span>
+                    <button class="btn btn-secondary btn-sm" @onclick="RealizarLogout">
+                        🚪 Sair
+                    </button>
+                </div>
+            }
+            else
+            {
+                <span class="user-info">
+                    <span class="icon">👤</span> Visitante
+                </span>
+            }
         </div>
 
         <article class="content px-4">
@@ -59,3 +82,27 @@
         </article>
     </main>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AuthService.OnAuthStateChanged += StateHasChanged;
+        
+        // Verificar se está autenticado
+        if (!AuthService.EstaAutenticado() && !NavigationManager.Uri.Contains("/login"))
+        {
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+    }
+
+    private void RealizarLogout()
+    {
+        AuthService.Logout();
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnAuthStateChanged -= StateHasChanged;
+    }
+}

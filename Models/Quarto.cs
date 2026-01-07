@@ -6,6 +6,7 @@ namespace Hotelaria.Models
         public string Numero { get; set; } = string.Empty;
         public TipoQuarto Tipo { get; set; }
         public int Capacidade { get; set; }
+        public int NumeroVagas { get; set; } = 1; // Número de vagas/camas disponíveis
         public decimal PrecoPorNoite { get; set; }
         public StatusQuarto Status { get; set; } = StatusQuarto.Disponivel;
         public string Descricao { get; set; } = string.Empty;

@@ -15,5 +15,13 @@ RUN dotnet publish "Hotelaria.csproj" -c Release -o /app/publish /p:UseAppHost=f
 
 FROM base AS final
 WORKDIR /app
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
+ENV ASPNETCORE_URLS=http://+:$PORT
+ENV ASPNETCORE_ENVIRONMENT=Production
+EXPOSE $PORT
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:$PORT/ || exit 1
 ENTRYPOINT ["dotnet", "Hotelaria.dll"]

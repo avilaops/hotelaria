@@ -1,154 +1,12 @@
 @page "/importar"
 @inject ImportacaoService ImportacaoService
+@inject ReservaService ReservaService
+@inject QuartoService QuartoService
+@inject HospedeService HospedeService
+@inject AuthService AuthService
 @inject NavigationManager NavigationManager
-@using Microsoft.AspNetCore.Components.Forms
 
 <PageTitle>Importar Dados - Hotelaria</PageTitle>
-
-<div class="page-header">
-    <h1>📥 Importar Reservas</h1>
-</div>
-
-<div class="import-container">
-    <div class="import-section">
-        <h2>1️⃣ Selecionar Arquivo</h2>
-        <p>Selecione um arquivo CSV ou TSV com os dados das reservas</p>
-        
-        <div class="file-upload">
-            <InputFile OnChange="@CarregarArquivo" accept=".csv,.tsv,.txt" />
-            
-            @if (!string.IsNullOrEmpty(nomeArquivo))
-            {
-                <div class="file-info">
-                    <span class="icon">📄</span>
-                    <span>@nomeArquivo</span>
-                    <span class="file-size">(@tamanhoArquivo KB)</span>
-                </div>
-            }
-        </div>
-
-        <div class="format-info">
-            <h4>📋 Formato Esperado:</h4>
-            <ul>
-                <li>Arquivo separado por tabulações (TSV) ou vírgulas (CSV)</li>
-                <li>Primeira linha: cabeçalhos</li>
-                <li>Colunas: Nome, Data Nascimento, Nº Documento, País, Tipo Doc, Cama, Check-in, Check-out, etc.</li>
-            </ul>
-        </div>
-    </div>
-
-    @if (processando)
-    {
-        <div class="loading">
-            <div class="spinner"></div>
-            <p>Processando arquivo...</p>
-        </div>
-    }
-
-    @if (resultado != null)
-    {
-        <div class="import-section">
-            <h2>2️⃣ Resultado do Processamento</h2>
-            
-            <div class="resultado-stats">
-                <div class="stat-card success">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-content">
-                        <h3>@resultado.LinhasImportadas</h3>
-                        <p>Linhas Válidas</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card error">
-                    <div class="stat-icon">❌</div>
-                    <div class="stat-content">
-                        <h3>@resultado.LinhasComErro</h3>
-                        <p>Com Erros</p>
-                    </div>
-                </div>
-                
-                <div class="stat-card info">
-                    <div class="stat-icon">📊</div>
-                    <div class="stat-content">
-                        <h3>@resultado.TotalLinhas</h3>
-                        <p>Total</p>
-                    </div>
-                </div>
-            </div>
-
-            @if (resultado.Erros.Any())
-            {
-                <div class="erros-section">
-                    <h3>⚠️ Erros Encontrados:</h3>
-                    <div class="erros-list">
-                        @foreach (var erro in resultado.Erros.Take(10))
-                        {
-                            <div class="erro-item">@erro</div>
-                        }
-                        @if (resultado.Erros.Count > 10)
-                        {
-                            <div class="erro-item">... e mais @(resultado.Erros.Count - 10) erros</div>
-                        }
-                    </div>
-                </div>
-            }
-
-            @if (resultado.LinhasImportadas > 0)
-            {
-                <div class="preview-section">
-                    <h3>📋 Preview dos Dados (Primeiras 5 linhas):</h3>
-                    <div class="table-container">
-                        <table class="preview-table">
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Documento</th>
-                                    <th>País</th>
-                                    <th>Check-in</th>
-                                    <th>Check-out</th>
-                                    <th>Quarto</th>
-                                    <th>Total</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in resultado.DadosProcessados.Where(d => d.IsValid).Take(5))
-                                {
-                                    <tr>
-                                        <td>@item.Nome</td>
-                                        <td>@item.NumeroDocumento</td>
-                                        <td>@item.Pais</td>
-                                        <td>@item.CheckIn?.ToString("dd/MM/yyyy")</td>
-                                        <td>@item.CheckOut?.ToString("dd/MM/yyyy")</td>
-                                        <td>Q @item.NumeroQuarto</td>
-                                        <td>€ @item.Total.ToString("N2")</td>
-                                        <td><span class="badge-success">✓ Válido</span></td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="action-buttons">
-                    <button class="btn btn-secondary" @onclick="LimparDados">🔄 Cancelar</button>
-                    <button class="btn btn-success btn-lg" @onclick="ConfirmarImportacao">
-                        ✅ Importar @resultado.LinhasImportadas Reservas
-                    </button>
-                </div>
-            }
-        </div>
-    }
-
-    @if (importacaoConcluida)
-    {
-        <div class="success-message">
-            <h2>🎉 Importação Concluída!</h2>
-            <p>@resultado!.LinhasImportadas reservas foram importadas com sucesso.</p>
-            <button class="btn btn-primary" @onclick="IrParaReservas">Ver Reservas</button>
-        </div>
-    }
-</div>
 
 @code {
     private string? nomeArquivo;
@@ -157,6 +15,24 @@
     private ImportacaoResultado? resultado;
     private bool importacaoConcluida = false;
     private string conteudoArquivo = string.Empty;
+    private bool importando = false;
+
+    protected override void OnInitialized()
+    {
+        // Verificar autenticação
+        if (!AuthService.EstaAutenticado())
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        // Apenas Gerente+ pode importar dados
+        if (!AuthService.TemPermissao(PerfilUsuario.Gerente))
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+    }
 
     private async Task CarregarArquivo(InputFileChangeEventArgs e)
     {
@@ -192,18 +68,27 @@
         }
     }
 
-    private void ConfirmarImportacao()
+    private async Task ConfirmarImportacao()
     {
-        if (resultado != null && resultado.LinhasImportadas > 0)
+        if (resultado != null && resultado.LinhasImportadas > 0 && !importando)
         {
             try
             {
+                importando = true;
+                StateHasChanged();
+                
+                await Task.Delay(500); // Pequeno delay para feedback visual
+                
                 ImportacaoService.ImportarParaSistema(resultado.DadosProcessados);
                 importacaoConcluida = true;
             }
             catch (Exception ex)
             {
-                resultado.Erros.Add($"Erro na importação: {ex.Message}");
+                resultado.Erros.Add($"❌ Erro na importação: {ex.Message}");
+            }
+            finally
+            {
+                importando = false;
             }
         }
     }
@@ -216,8 +101,267 @@
         conteudoArquivo = string.Empty;
     }
 
+    private void ImportarMais()
+    {
+        LimparDados();
+        importacaoConcluida = false;
+    }
+
     private void IrParaReservas()
     {
         NavigationManager.NavigateTo("/reservas");
     }
 }
+
+<div class="page-header">
+    <h1>📥 Importar Reservas</h1>
+    <div class="header-actions">
+        <a href="/docs/IMPORTACAO.md" class="btn btn-secondary" target="_blank">
+            📖 Ver Documentação
+        </a>
+    </div>
+</div>
+
+<div class="import-container">
+    <div class="import-section">
+        <h2>1️⃣ Selecionar Arquivo</h2>
+        <p class="section-description">Selecione um arquivo CSV ou TSV com os dados das reservas para importação</p>
+        
+        <div class="file-upload">
+            <InputFile OnChange="@CarregarArquivo" accept=".csv,.tsv,.txt" class="file-input" id="file-input" />
+            <label for="file-input" class="file-label">
+                <span class="upload-icon">📁</span>
+                <span class="upload-text">Clique aqui ou arraste o arquivo</span>
+                <span class="upload-hint">CSV, TSV ou TXT (máx. 10MB)</span>
+            </label>
+            
+            @if (!string.IsNullOrEmpty(nomeArquivo))
+            {
+                <div class="file-info">
+                    <span class="icon">📄</span>
+                    <div class="file-details">
+                        <strong>@nomeArquivo</strong>
+                        <span class="file-size">@tamanhoArquivo KB · @(resultado?.TotalLinhas ?? 0) linhas</span>
+                    </div>
+                    <button class="btn-remove" @onclick="LimparDados" title="Remover arquivo">✖</button>
+                </div>
+            }
+        </div>
+
+        <div class="format-info">
+            <h4>📋 Formato Esperado:</h4>
+            <div class="format-details">
+                <div class="format-item">
+                    <strong>Separador:</strong> Tabulação (TSV), vírgula (CSV) ou ponto-e-vírgula (;)
+                </div>
+                <div class="format-item">
+                    <strong>Primeira linha:</strong> Cabeçalhos das colunas
+                </div>
+                <div class="format-item">
+                    <strong>Colunas essenciais:</strong> Nome, Check-in, Check-out, Nº Reserva, Total
+                </div>
+            </div>
+            <details class="format-example">
+                <summary>Ver exemplo de formato</summary>
+                <pre class="code-example">Nome	Data Nascimento	Nº Documento	País	Tipo Doc	Cama	Check-in	Check-out	Dias Pessoas	...
+João Silva	01/01/1990	123456789	Portugal	BI	Q 3 - Cama 01	15/01/2024	20/01/2024	5	...</pre>
+            </details>
+        </div>
+    </div>
+
+    @if (processando)
+    {
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Processando arquivo...</p>
+            <p class="loading-hint">Validando dados e verificando erros</p>
+        </div>
+    }
+
+    @if (resultado != null && !processando)
+    {
+        <div class="import-section">
+            <h2>2️⃣ Resultado do Processamento</h2>
+            
+            <div class="resultado-stats">
+                <div class="stat-card success">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-content">
+                        <h3>@resultado.LinhasImportadas</h3>
+                        <p>Linhas Válidas</p>
+                        <small>@(resultado.TotalLinhas > 0 ? Math.Round((decimal)resultado.LinhasImportadas / resultado.TotalLinhas * 100, 1) : 0)% do total</small>
+                    </div>
+                </div>
+                
+                <div class="stat-card error">
+                    <div class="stat-icon">❌</div>
+                    <div class="stat-content">
+                        <h3>@resultado.LinhasComErro</h3>
+                        <p>Com Erros</p>
+                        <small>@(resultado.TotalLinhas > 0 ? Math.Round((decimal)resultado.LinhasComErro / resultado.TotalLinhas * 100, 1) : 0)% do total</small>
+                    </div>
+                </div>
+                
+                <div class="stat-card info">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <h3>@resultado.TotalLinhas</h3>
+                        <p>Total de Linhas</p>
+                        <small>Excluindo cabeçalho</small>
+                    </div>
+                </div>
+
+                @if (resultado.LinhasImportadas > 0)
+                {
+                    <div class="stat-card success">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-content">
+                            <h3>€ @resultado.DadosProcessados.Where(d => d.IsValid).Sum(d => d.Total).ToString("N2")</h3>
+                            <p>Valor Total</p>
+                            <small>@resultado.LinhasImportadas reservas</small>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (resultado.Erros.Any())
+            {
+                <div class="erros-section @(resultado.LinhasImportadas > 0 ? "warning" : "error")">
+                    <div class="erros-header">
+                        <h3>@(resultado.LinhasImportadas > 0 ? "⚠️" : "❌") 
+                            @resultado.Erros.Count @(resultado.Erros.Count == 1 ? "Erro Encontrado" : "Erros Encontrados")
+                        </h3>
+                        @if (resultado.LinhasImportadas > 0)
+                        {
+                            <p class="erros-hint">Você pode importar as linhas válidas e corrigir os erros depois</p>
+                        }
+                    </div>
+                    <div class="erros-list">
+                        @foreach (var erro in resultado.Erros.Take(15))
+                        {
+                            <div class="erro-item @(erro.Contains("⚠️") ? "warning" : "error")">
+                                @erro
+                            </div>
+                        }
+                        @if (resultado.Erros.Count > 15)
+                        {
+                            <div class="erro-item info">
+                                📋 ... e mais @(resultado.Erros.Count - 15) @(resultado.Erros.Count - 15 == 1 ? "erro" : "erros")
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (resultado.LinhasImportadas > 0)
+            {
+                <div class="preview-section">
+                    <h3>📋 Preview dos Dados (Primeiras @Math.Min(resultado.LinhasImportadas, 5) linhas válidas):</h3>
+                    <div class="table-container">
+                        <table class="preview-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Documento</th>
+                                    <th>País</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Noites</th>
+                                    <th>Quarto</th>
+                                    <th>Diária</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in resultado.DadosProcessados.Where(d => d.IsValid).Take(5))
+                                {
+                                    var noites = item.CheckOut.HasValue && item.CheckIn.HasValue 
+                                        ? (item.CheckOut.Value - item.CheckIn.Value).Days 
+                                        : 0;
+                                    <tr>
+                                        <td><strong>@item.Nome</strong></td>
+                                        <td>@item.NumeroDocumento</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(item.Pais))
+                                            {
+                                                <span class="country-badge">🌍 @item.Pais</span>
+                                            }
+                                        </td>
+                                        <td>@item.CheckIn?.ToString("dd/MM/yyyy")</td>
+                                        <td>@item.CheckOut?.ToString("dd/MM/yyyy")</td>
+                                        <td class="text-center">@noites</td>
+                                        <td class="text-center"><span class="quarto-badge">Q @item.NumeroQuarto</span></td>
+                                        <td class="text-right">€ @item.Diaria.ToString("N2")</td>
+                                        <td class="text-right"><strong>€ @item.Total.ToString("N2")</strong></td>
+                                        <td><span class="badge-success">✓ Válido</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    @if (resultado.LinhasImportadas > 5)
+                    {
+                        <p class="preview-hint">+ @(resultado.LinhasImportadas - 5) @(resultado.LinhasImportadas - 5 == 1 ? "linha adicional" : "linhas adicionais") pronta(s) para importar</p>
+                    }
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" @onclick="LimparDados">
+                        🔄 Cancelar e Escolher Outro Arquivo
+                    </button>
+                    <button class="btn btn-success btn-lg" @onclick="ConfirmarImportacao" disabled="@importando">
+                        @if (importando)
+                        {
+                            <span class="spinner-small"></span>
+                            <span>Importando...</span>
+                        }
+                        else
+                        {
+                            <span>✅ Importar @resultado.LinhasImportadas @(resultado.LinhasImportadas == 1 ? "Reserva" : "Reservas")</span>
+                        }
+                    </button>
+                </div>
+            }
+            else if (resultado.LinhasComErro > 0)
+            {
+                <div class="no-valid-data">
+                    <div class="icon">⚠️</div>
+                    <h3>Nenhuma linha válida encontrada</h3>
+                    <p>Corrija os erros no arquivo e tente novamente.</p>
+                    <button class="btn btn-primary" @onclick="LimparDados">
+                        🔄 Tentar Novamente
+                    </button>
+                </div>
+            }
+        </div>
+    }
+
+    @if (importacaoConcluida)
+    {
+        <div class="success-message">
+            <div class="success-icon">🎉</div>
+            <h2>Importação Concluída com Sucesso!</h2>
+            <p class="success-details">
+                <strong>@resultado!.LinhasImportadas</strong> @(resultado.LinhasImportadas == 1 ? "reserva foi importada" : "reservas foram importadas") 
+                para o sistema.
+            </p>
+            @if (resultado.LinhasComErro > 0)
+            {
+                <p class="success-warning">
+                    ⚠️ @resultado.LinhasComErro @(resultado.LinhasComErro == 1 ? "linha não foi importada" : "linhas não foram importadas") 
+                    devido a erros de validação.
+                </p>
+            }
+            <div class="success-actions">
+                <button class="btn btn-primary btn-lg" @onclick="IrParaReservas">
+                    📋 Ver Reservas Importadas
+                </button>
+                <button class="btn btn-secondary" @onclick="ImportarMais">
+                    📥 Importar Mais Dados
+                </button>
+            </div>
+        </div>
+    }
+</div>

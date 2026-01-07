@@ -9,82 +9,65 @@ namespace Hotelaria.Services
 
         public QuartoService()
         {
-            // Dados de exemplo
+            // Dados de exemplo com número de vagas
             AdicionarQuarto(new Quarto 
             { 
-                Numero = "101", 
+                Numero = "1", 
                 Tipo = TipoQuarto.Standard, 
-                Capacidade = 2, 
-                PrecoPorNoite = 150.00m,
+                Capacidade = 2,
+                NumeroVagas = 8, // 8 vagas/camas
+                PrecoPorNoite = 20.00m,
                 Status = StatusQuarto.Disponivel,
-                Descricao = "Quarto standard com cama de casal",
-                Comodidades = new List<string> { "Wi-Fi", "TV", "Ar condicionado", "Frigobar" }
+                Descricao = "Quarto compartilhado com 8 camas",
+                Comodidades = new List<string> { "Wi-Fi", "Armários", "Ar condicionado" }
             });
             
             AdicionarQuarto(new Quarto 
             { 
-                Numero = "102", 
+                Numero = "2", 
                 Tipo = TipoQuarto.Standard, 
-                Capacidade = 2, 
-                PrecoPorNoite = 150.00m,
+                Capacidade = 2,
+                NumeroVagas = 6, // 6 vagas/camas
+                PrecoPorNoite = 20.00m,
                 Status = StatusQuarto.Disponivel,
-                Descricao = "Quarto standard com duas camas de solteiro",
-                Comodidades = new List<string> { "Wi-Fi", "TV", "Ar condicionado", "Frigobar" }
+                Descricao = "Quarto compartilhado com 6 camas",
+                Comodidades = new List<string> { "Wi-Fi", "Armários", "Ar condicionado" }
             });
             
             AdicionarQuarto(new Quarto 
             { 
-                Numero = "201", 
+                Numero = "3", 
+                Tipo = TipoQuarto.Standard, 
+                Capacidade = 2,
+                NumeroVagas = 4, // 4 vagas/camas
+                PrecoPorNoite = 25.00m,
+                Status = StatusQuarto.Disponivel,
+                Descricao = "Quarto compartilhado com 4 camas",
+                Comodidades = new List<string> { "Wi-Fi", "Armários", "Ar condicionado", "Frigobar" }
+            });
+            
+            AdicionarQuarto(new Quarto 
+            { 
+                Numero = "4", 
                 Tipo = TipoQuarto.Deluxe, 
-                Capacidade = 3, 
-                PrecoPorNoite = 280.00m,
-                Status = StatusQuarto.Ocupado,
-                Descricao = "Quarto deluxe com varanda",
-                Comodidades = new List<string> { "Wi-Fi", "TV Smart", "Ar condicionado", "Frigobar", "Varanda", "Cofre" }
+                Capacidade = 3,
+                NumeroVagas = 3, // 3 vagas/camas
+                PrecoPorNoite = 30.00m,
+                Status = StatusQuarto.Disponivel,
+                Descricao = "Quarto compartilhado deluxe com 3 camas",
+                Comodidades = new List<string> { "Wi-Fi", "Armários", "Ar condicionado", "Frigobar", "Banheiro privativo" }
             });
             
             AdicionarQuarto(new Quarto 
             { 
-                Numero = "301", 
+                Numero = "5", 
                 Tipo = TipoQuarto.Suite, 
-                Capacidade = 4, 
-                PrecoPorNoite = 450.00m,
+                Capacidade = 2,
+                NumeroVagas = 2, // 2 vagas/camas
+                PrecoPorNoite = 50.00m,
                 Status = StatusQuarto.Disponivel,
-                Descricao = "Suíte com sala de estar",
-                Comodidades = new List<string> { "Wi-Fi", "TV Smart", "Ar condicionado", "Frigobar", "Varanda", "Cofre", "Banheira", "Sala de estar" }
-            });
-            
-            AdicionarQuarto(new Quarto 
-            { 
-                Numero = "401", 
-                Tipo = TipoQuarto.Presidential, 
-                Capacidade = 6, 
-                PrecoPorNoite = 1200.00m,
-                Status = StatusQuarto.Disponivel,
-                Descricao = "Suíte presidencial com vista panorâmica",
-                Comodidades = new List<string> { "Wi-Fi", "TV Smart", "Ar condicionado", "Frigobar", "Varanda", "Cofre", "Banheira de hidromassagem", "Sala de estar", "Sala de jantar", "Cozinha" }
-            });
-            
-            AdicionarQuarto(new Quarto 
-            { 
-                Numero = "103", 
-                Tipo = TipoQuarto.Standard, 
-                Capacidade = 2, 
-                PrecoPorNoite = 150.00m,
-                Status = StatusQuarto.Limpeza,
-                Descricao = "Quarto standard em limpeza",
-                Comodidades = new List<string> { "Wi-Fi", "TV", "Ar condicionado", "Frigobar" }
-            });
-            
-            AdicionarQuarto(new Quarto 
-            { 
-                Numero = "104", 
-                Tipo = TipoQuarto.Standard, 
-                Capacidade = 2, 
-                PrecoPorNoite = 150.00m,
-                Status = StatusQuarto.Manutencao,
-                Descricao = "Quarto em manutenção",
-                Comodidades = new List<string> { "Wi-Fi", "TV", "Ar condicionado", "Frigobar" }
+                Descricao = "Quarto privado com 2 camas",
+                Comodidades = new List<string> { "Wi-Fi", "TV", "Ar condicionado", "Frigobar", "Banheiro privativo", "Varanda" }
             });
         }
 

@@ -1,0 +1,151 @@
+@using Hotelaria.Models
+
+<div class="ajuda-flutuante" title="Pressione F1 para ajuda">
+    <button class="btn-ajuda" @onclick="AbrirAjuda">
+        <span class="icon">❓</span>
+        <span class="texto">Ajuda (F1)</span>
+    </button>
+</div>
+
+@if (mostrarAjuda && ajudaAtual != null)
+{
+    <div class="modal-overlay" @onclick="FecharAjuda">
+        <div class="modal-content ajuda-modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>@ajudaAtual.Titulo</h2>
+                <button class="btn-close" @onclick="FecharAjuda">✖</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="ajuda-section">
+                    <p class="ajuda-descricao">@ajudaAtual.Descricao</p>
+                </div>
+
+                <div class="ajuda-section">
+                    <h3>📚 Como Usar:</h3>
+                    <ul class="ajuda-lista">
+                        @foreach (var topico in ajudaAtual.TopicosAjuda)
+                        {
+                            <li>@topico</li>
+                        }
+                    </ul>
+                </div>
+
+                @if (ajudaAtual.Atalhos.Any())
+                {
+                    <div class="ajuda-section">
+                        <h3>⌨️ Atalhos de Teclado:</h3>
+                        <div class="atalhos-grid">
+                            @foreach (var atalho in ajudaAtual.Atalhos)
+                            {
+                                <div class="atalho-item">
+                                    <kbd class="tecla">@atalho.Tecla</kbd>
+                                    <div class="atalho-info">
+                                        <strong>@atalho.Descricao</strong>
+                                        <small>@atalho.Funcao</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="ajuda-section atalhos-globais">
+                    <h3>🌐 Atalhos Globais do Sistema:</h3>
+                    <div class="atalhos-grid">
+                        <div class="atalho-item">
+                            <kbd class="tecla">F1</kbd>
+                            <div class="atalho-info">
+                                <strong>Ajuda da página atual</strong>
+                            </div>
+                        </div>
+                        <div class="atalho-item">
+                            <kbd class="tecla">Ctrl + H</kbd>
+                            <div class="atalho-info">
+                                <strong>Ir para Página Principal</strong>
+                            </div>
+                        </div>
+                        <div class="atalho-item">
+                            <kbd class="tecla">Ctrl + R</kbd>
+                            <div class="atalho-info">
+                                <strong>Ir para Reservas</strong>
+                            </div>
+                        </div>
+                        <div class="atalho-item">
+                            <kbd class="tecla">Ctrl + Q</kbd>
+                            <div class="atalho-info">
+                                <strong>Ir para Quartos</strong>
+                            </div>
+                        </div>
+                        <div class="atalho-item">
+                            <kbd class="tecla">Ctrl + D</kbd>
+                            <div class="atalho-info">
+                                <strong>Ir para Disponibilidade</strong>
+                            </div>
+                        </div>
+                        <div class="atalho-item">
+                            <kbd class="tecla">Ctrl + F</kbd>
+                            <div class="atalho-info">
+                                <strong>Ir para Financeiro</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ajuda-footer-info">
+                    <p>💡 <strong>Dica:</strong> Pressione <kbd>F1</kbd> em qualquer página para ver ajuda específica.</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="FecharAjuda">Fechar (Esc)</button>
+                <button class="btn btn-primary" @onclick="IrParaDocumentacao">📖 Documentação Completa</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string ModuloAtual { get; set; } = "principal";
+
+    private bool mostrarAjuda = false;
+    private AjudaContextual? ajudaAtual;
+
+    protected override void OnInitialized()
+    {
+        CarregarAjuda();
+    }
+
+    protected override void OnParametersSet()
+    {
+        CarregarAjuda();
+    }
+
+    private void CarregarAjuda()
+    {
+        if (AjudaModulos.Modulos.TryGetValue(ModuloAtual.ToLower(), out var ajuda))
+        {
+            ajudaAtual = ajuda;
+        }
+    }
+
+    public void AbrirAjuda()
+    {
+        mostrarAjuda = true;
+    }
+
+    private void FecharAjuda()
+    {
+        mostrarAjuda = false;
+    }
+
+    private void IrParaDocumentacao()
+    {
+        // Abrir documentação em nova aba
+        NavigationManager.NavigateTo("https://github.com/avilaops/hotelaria#readme", true);
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+}
