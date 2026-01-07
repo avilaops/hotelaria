@@ -1,0 +1,56 @@
+@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <div class="top-row ps-3 navbar navbar-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="">🏨 Hotelaria</a>
+            </div>
+        </div>
+
+        <nav class="flex-column">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <span class="icon">🏠</span> Dashboard
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="reservas">
+                    <span class="icon">📋</span> Reservas
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="quartos">
+                    <span class="icon">🛏️</span> Quartos
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="hospedes">
+                    <span class="icon">👥</span> Hóspedes
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="disponibilidade">
+                    <span class="icon">📅</span> Disponibilidade
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="financeiro">
+                    <span class="icon">💰</span> Financeiro
+                </NavLink>
+            </div>
+        </nav>
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <span class="user-info">
+                <span class="icon">👤</span> Administrador
+            </span>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>

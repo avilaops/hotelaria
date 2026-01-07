@@ -1,0 +1,321 @@
+@page "/financeiro"
+@inject ReservaService ReservaService
+@inject QuartoService QuartoService
+
+<PageTitle>Financeiro - Hotelaria</PageTitle>
+
+<div class="page-header">
+    <h1>💰 Resumo Financeiro</h1>
+</div>
+
+<div class="filters-section">
+    <div class="filter-group">
+        <label>Período:</label>
+        <select @onchange="AlterarPeriodo" class="form-control">
+            <option value="hoje">Hoje</option>
+            <option value="semana">Esta Semana</option>
+            <option value="mes" selected>Este Mês</option>
+            <option value="ano">Este Ano</option>
+            <option value="personalizado">Personalizado</option>
+        </select>
+    </div>
+    
+    @if (periodoPersonalizado)
+    {
+        <div class="filter-group">
+            <label>De:</label>
+            <input type="date" @bind="dataInicio" @bind:event="oninput" class="form-control" />
+        </div>
+        
+        <div class="filter-group">
+            <label>Até:</label>
+            <input type="date" @bind="dataFim" @bind:event="oninput" class="form-control" />
+        </div>
+    }
+</div>
+
+<div class="stats-container">
+    <div class="stat-card receita">
+        <div class="stat-icon">💵</div>
+        <div class="stat-content">
+            <h3>€ @receitaTotal.ToString("N2")</h3>
+            <p>Receita Total</p>
+        </div>
+    </div>
+    
+    <div class="stat-card comissao">
+        <div class="stat-icon">💸</div>
+        <div class="stat-content">
+            <h3>€ @comissaoTotal.ToString("N2")</h3>
+            <p>Comissões</p>
+        </div>
+    </div>
+    
+    <div class="stat-card liquido">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+            <h3>€ @receitaLiquida.ToString("N2")</h3>
+            <p>Receita Líquida</p>
+        </div>
+    </div>
+    
+    <div class="stat-card ocupacao">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+            <h3>@taxaOcupacao.ToString("N1")%</h3>
+            <p>Taxa de Ocupação</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dashboard-section">
+        <h2>Receitas por Tipo de Pagamento</h2>
+        <div class="pagamentos-lista">
+            @foreach (var (tipo, valor) in receitasPorPagamento.OrderByDescending(x => x.Value))
+            {
+                <div class="pagamento-item">
+                    <div class="pagamento-info">
+                        <span class="tipo">@GetTipoPagamentoTexto(tipo)</span>
+                        <span class="valor">€ @valor.ToString("N2")</span>
+                    </div>
+                    <div class="pagamento-barra">
+                        <div class="barra-progresso" style="width: @((valor / receitaTotal * 100).ToString("F0"))%"></div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Receitas por Tipo de Quarto</h2>
+        <div class="quartos-receita">
+            @foreach (var (tipo, valor) in receitasPorTipoQuarto.OrderByDescending(x => x.Value))
+            {
+                <div class="receita-item">
+                    <div class="receita-header">
+                        <span class="tipo">@GetTipoQuartoTexto(tipo)</span>
+                        <span class="valor">€ @valor.ToString("N2")</span>
+                    </div>
+                    <div class="receita-detalhes">
+                        <span>@reservasPorTipo[tipo] reserva@(reservasPorTipo[tipo] > 1 ? "s" : "")</span>
+                        <span class="ticket-medio">Ticket médio: € @(valor / reservasPorTipo[tipo]).ToString("N2")</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="dashboard-section full-width">
+        <h2>Transações Recentes</h2>
+        <table class="transacoes-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Nº Reserva</th>
+                    <th>Hóspede</th>
+                    <th>Quarto</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Tipo Pagamento</th>
+                    <th>Valor</th>
+                    <th>Comissão</th>
+                    <th>Líquido</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reserva in reservasPeriodo.OrderByDescending(r => r.DataReserva).Take(20))
+                {
+                    <tr>
+                        <td>@reserva.DataReserva.ToString("dd/MM/yyyy")</td>
+                        <td>@reserva.NumeroReserva</td>
+                        <td>@reserva.Hospede?.Nome</td>
+                        <td>@reserva.Quarto?.Numero</td>
+                        <td>@reserva.CheckIn.ToString("dd/MM/yyyy")</td>
+                        <td>@reserva.CheckOut.ToString("dd/MM/yyyy")</td>
+                        <td>@GetTipoPagamentoTexto(reserva.TipoPagamento)</td>
+                        <td class="price">€ @reserva.ValorTotal.ToString("N2")</td>
+                        <td class="price comissao-text">€ @reserva.Comissao.ToString("N2")</td>
+                        <td class="price liquido-text">€ @((reserva.ValorTotal - reserva.Comissao).ToString("N2"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Estatísticas</h2>
+        <div class="estatisticas-grid">
+            <div class="estatistica-card">
+                <span class="label">Total de Reservas:</span>
+                <span class="value">@reservasPeriodo.Count</span>
+            </div>
+            <div class="estatistica-card">
+                <span class="label">Diária Média:</span>
+                <span class="value">€ @diariaMedia.ToString("N2")</span>
+            </div>
+            <div class="estatistica-card">
+                <span class="label">Tempo Médio de Estadia:</span>
+                <span class="value">@tempoMedioEstadia.ToString("N1") dias</span>
+            </div>
+            <div class="estatistica-card">
+                <span class="label">RevPAR:</span>
+                <span class="value" title="Revenue Per Available Room">€ @revPAR.ToString("N2")</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Top 5 Hóspedes</h2>
+        <div class="top-hospedes">
+            @foreach (var (hospede, total) in topHospedes)
+            {
+                <div class="hospede-ranking">
+                    <div class="hospede-nome">@hospede</div>
+                    <div class="hospede-valor">€ @total.ToString("N2")</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private DateTime dataInicio;
+    private DateTime dataFim;
+    private bool periodoPersonalizado = false;
+    
+    private decimal receitaTotal = 0;
+    private decimal comissaoTotal = 0;
+    private decimal receitaLiquida = 0;
+    private decimal taxaOcupacao = 0;
+    private decimal diariaMedia = 0;
+    private decimal tempoMedioEstadia = 0;
+    private decimal revPAR = 0;
+    
+    private List<Reserva> reservasPeriodo = new();
+    private Dictionary<TipoPagamento, decimal> receitasPorPagamento = new();
+    private Dictionary<TipoQuarto, decimal> receitasPorTipoQuarto = new();
+    private Dictionary<TipoQuarto, int> reservasPorTipo = new();
+    private List<(string hospede, decimal total)> topHospedes = new();
+
+    protected override void OnInitialized()
+    {
+        // Inicializar com este mês
+        dataInicio = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        dataFim = DateTime.Today;
+        CarregarDados();
+    }
+
+    private void AlterarPeriodo(ChangeEventArgs e)
+    {
+        var periodo = e.Value?.ToString();
+        periodoPersonalizado = false;
+
+        switch (periodo)
+        {
+            case "hoje":
+                dataInicio = DateTime.Today;
+                dataFim = DateTime.Today;
+                break;
+            case "semana":
+                dataInicio = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+                dataFim = DateTime.Today;
+                break;
+            case "mes":
+                dataInicio = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                dataFim = DateTime.Today;
+                break;
+            case "ano":
+                dataInicio = new DateTime(DateTime.Today.Year, 1, 1);
+                dataFim = DateTime.Today;
+                break;
+            case "personalizado":
+                periodoPersonalizado = true;
+                return;
+        }
+
+        CarregarDados();
+    }
+
+    private void CarregarDados()
+    {
+        reservasPeriodo = ReservaService.ObterTodas()
+            .Where(r => r.DataReserva.Date >= dataInicio.Date && 
+                       r.DataReserva.Date <= dataFim.Date &&
+                       r.Status != StatusReserva.Cancelada)
+            .ToList();
+
+        receitaTotal = reservasPeriodo.Sum(r => r.ValorTotal);
+        comissaoTotal = reservasPeriodo.Sum(r => r.Comissao);
+        receitaLiquida = receitaTotal - comissaoTotal;
+
+        // Calcular receitas por tipo de pagamento
+        receitasPorPagamento = reservasPeriodo
+            .GroupBy(r => r.TipoPagamento)
+            .ToDictionary(g => g.Key, g => g.Sum(r => r.ValorTotal));
+
+        // Calcular receitas por tipo de quarto
+        receitasPorTipoQuarto = reservasPeriodo
+            .Where(r => r.Quarto != null)
+            .GroupBy(r => r.Quarto!.Tipo)
+            .ToDictionary(g => g.Key, g => g.Sum(r => r.ValorTotal));
+
+        reservasPorTipo = reservasPeriodo
+            .Where(r => r.Quarto != null)
+            .GroupBy(r => r.Quarto!.Tipo)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        // Top hóspedes
+        topHospedes = reservasPeriodo
+            .Where(r => r.Hospede != null)
+            .GroupBy(r => r.Hospede!.Nome)
+            .Select(g => (g.Key, g.Sum(r => r.ValorTotal)))
+            .OrderByDescending(x => x.Item2)
+            .Take(5)
+            .ToList();
+
+        // Estatísticas
+        if (reservasPeriodo.Any())
+        {
+            diariaMedia = receitaTotal / reservasPeriodo.Sum(r => r.DiasHospedagem);
+            tempoMedioEstadia = (decimal)reservasPeriodo.Average(r => r.DiasHospedagem);
+        }
+
+        // Taxa de ocupação
+        var totalQuartos = QuartoService.ObterTodos().Count;
+        var diasPeriodo = (dataFim - dataInicio).Days + 1;
+        var quartosDisponiveis = totalQuartos * diasPeriodo;
+        var quartosOcupados = reservasPeriodo.Sum(r => r.DiasHospedagem);
+        
+        if (quartosDisponiveis > 0)
+        {
+            taxaOcupacao = ((decimal)quartosOcupados / quartosDisponiveis) * 100;
+            revPAR = receitaTotal / (totalQuartos * diasPeriodo);
+        }
+    }
+
+    private string GetTipoPagamentoTexto(TipoPagamento tipo)
+    {
+        return tipo switch
+        {
+            TipoPagamento.TransferenciaBancaria => "Transferência Bancária",
+            TipoPagamento.CartaoCredito => "Cartão de Crédito",
+            TipoPagamento.Dinheiro => "Dinheiro",
+            TipoPagamento.PIX => "PIX",
+            TipoPagamento.BookingCom => "Booking.com",
+            _ => ""
+        };
+    }
+
+    private string GetTipoQuartoTexto(TipoQuarto tipo)
+    {
+        return tipo switch
+        {
+            TipoQuarto.Standard => "Standard",
+            TipoQuarto.Deluxe => "Deluxe",
+            TipoQuarto.Suite => "Suíte",
+            TipoQuarto.Presidential => "Presidential",
+            _ => ""
+        };
+    }
+}

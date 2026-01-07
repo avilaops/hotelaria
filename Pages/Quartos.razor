@@ -1,0 +1,288 @@
+@page "/quartos"
+@inject QuartoService QuartoService
+
+<PageTitle>Quartos - Hotelaria</PageTitle>
+
+<div class="page-header">
+    <h1>Gerenciamento de Quartos</h1>
+    <button class="btn btn-primary" @onclick="AbrirModalNovoQuarto">
+        ➕ Novo Quarto
+    </button>
+</div>
+
+<div class="filters-section">
+    <div class="filter-group">
+        <label>Status:</label>
+        <select @onchange="FiltrarPorStatus">
+            <option value="">Todos</option>
+            <option value="@StatusQuarto.Disponivel">Disponível</option>
+            <option value="@StatusQuarto.Ocupado">Ocupado</option>
+            <option value="@StatusQuarto.Limpeza">Limpeza</option>
+            <option value="@StatusQuarto.Manutencao">Manutenção</option>
+        </select>
+    </div>
+    
+    <div class="filter-group">
+        <label>Tipo:</label>
+        <select @onchange="FiltrarPorTipo">
+            <option value="">Todos</option>
+            <option value="@TipoQuarto.Standard">Standard</option>
+            <option value="@TipoQuarto.Deluxe">Deluxe</option>
+            <option value="@TipoQuarto.Suite">Suíte</option>
+            <option value="@TipoQuarto.Presidential">Presidential</option>
+        </select>
+    </div>
+</div>
+
+<div class="quartos-grid">
+    @foreach (var quarto in quartosFiltrados)
+    {
+        <div class="quarto-card @GetStatusClass(quarto.Status)">
+            <div class="quarto-header">
+                <h3>Quarto @quarto.Numero</h3>
+                <span class="status-badge @GetStatusClass(quarto.Status)">
+                    @GetStatusTexto(quarto.Status)
+                </span>
+            </div>
+            
+            <div class="quarto-info">
+                <div class="info-item">
+                    <span class="label">Tipo:</span>
+                    <span class="value">@GetTipoTexto(quarto.Tipo)</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Capacidade:</span>
+                    <span class="value">@quarto.Capacidade pessoas</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Preço/Noite:</span>
+                    <span class="value price">€ @quarto.PrecoPorNoite.ToString("N2")</span>
+                </div>
+            </div>
+            
+            <div class="quarto-description">
+                <p>@quarto.Descricao</p>
+            </div>
+            
+            <div class="quarto-amenities">
+                @foreach (var comodidade in quarto.Comodidades.Take(4))
+                {
+                    <span class="amenity-tag">@comodidade</span>
+                }
+                @if (quarto.Comodidades.Count > 4)
+                {
+                    <span class="amenity-tag more">+@(quarto.Comodidades.Count - 4)</span>
+                }
+            </div>
+            
+            <div class="quarto-actions">
+                <button class="btn btn-sm btn-secondary" @onclick="() => EditarQuarto(quarto)">
+                    ✏️ Editar
+                </button>
+                <button class="btn btn-sm btn-secondary" @onclick="() => AlterarStatus(quarto)">
+                    🔄 Status
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@if (mostrarModal)
+{
+    <div class="modal-overlay" @onclick="FecharModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>@(quartoEdicao.Id == 0 ? "Novo Quarto" : "Editar Quarto")</h2>
+                <button class="btn-close" @onclick="FecharModal">✖</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Número do Quarto:</label>
+                    <input type="text" @bind="quartoEdicao.Numero" class="form-control" />
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo:</label>
+                    <select @bind="quartoEdicao.Tipo" class="form-control">
+                        <option value="@TipoQuarto.Standard">Standard</option>
+                        <option value="@TipoQuarto.Deluxe">Deluxe</option>
+                        <option value="@TipoQuarto.Suite">Suíte</option>
+                        <option value="@TipoQuarto.Presidential">Presidential</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Capacidade:</label>
+                    <input type="number" @bind="quartoEdicao.Capacidade" class="form-control" />
+                </div>
+                
+                <div class="form-group">
+                    <label>Preço por Noite (€):</label>
+                    <input type="number" step="0.01" @bind="quartoEdicao.PrecoPorNoite" class="form-control" />
+                </div>
+                
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select @bind="quartoEdicao.Status" class="form-control">
+                        <option value="@StatusQuarto.Disponivel">Disponível</option>
+                        <option value="@StatusQuarto.Ocupado">Ocupado</option>
+                        <option value="@StatusQuarto.Limpeza">Limpeza</option>
+                        <option value="@StatusQuarto.Manutencao">Manutenção</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descrição:</label>
+                    <textarea @bind="quartoEdicao.Descricao" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                <button class="btn btn-primary" @onclick="SalvarQuarto">Salvar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Quarto> quartosFiltrados = new();
+    private bool mostrarModal = false;
+    private Quarto quartoEdicao = new();
+
+    protected override void OnInitialized()
+    {
+        CarregarQuartos();
+    }
+
+    private void CarregarQuartos()
+    {
+        quartosFiltrados = QuartoService.ObterTodos();
+    }
+
+    private void FiltrarPorStatus(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()))
+        {
+            quartosFiltrados = QuartoService.ObterTodos();
+        }
+        else
+        {
+            var status = Enum.Parse<StatusQuarto>(e.Value.ToString()!);
+            quartosFiltrados = QuartoService.FiltrarPorStatus(status);
+        }
+    }
+
+    private void FiltrarPorTipo(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()))
+        {
+            quartosFiltrados = QuartoService.ObterTodos();
+        }
+        else
+        {
+            var tipo = Enum.Parse<TipoQuarto>(e.Value.ToString()!);
+            quartosFiltrados = QuartoService.FiltrarPorTipo(tipo);
+        }
+    }
+
+    private void AbrirModalNovoQuarto()
+    {
+        quartoEdicao = new Quarto 
+        { 
+            Status = StatusQuarto.Disponivel,
+            Comodidades = new List<string> { "Wi-Fi", "TV", "Ar condicionado" }
+        };
+        mostrarModal = true;
+    }
+
+    private void EditarQuarto(Quarto quarto)
+    {
+        quartoEdicao = new Quarto
+        {
+            Id = quarto.Id,
+            Numero = quarto.Numero,
+            Tipo = quarto.Tipo,
+            Capacidade = quarto.Capacidade,
+            PrecoPorNoite = quarto.PrecoPorNoite,
+            Status = quarto.Status,
+            Descricao = quarto.Descricao,
+            Comodidades = new List<string>(quarto.Comodidades)
+        };
+        mostrarModal = true;
+    }
+
+    private void AlterarStatus(Quarto quarto)
+    {
+        var proximoStatus = quarto.Status switch
+        {
+            StatusQuarto.Disponivel => StatusQuarto.Ocupado,
+            StatusQuarto.Ocupado => StatusQuarto.Limpeza,
+            StatusQuarto.Limpeza => StatusQuarto.Disponivel,
+            StatusQuarto.Manutencao => StatusQuarto.Disponivel,
+            _ => StatusQuarto.Disponivel
+        };
+
+        quarto.Status = proximoStatus;
+        QuartoService.AtualizarQuarto(quarto);
+        CarregarQuartos();
+    }
+
+    private void SalvarQuarto()
+    {
+        if (quartoEdicao.Id == 0)
+        {
+            QuartoService.AdicionarQuarto(quartoEdicao);
+        }
+        else
+        {
+            QuartoService.AtualizarQuarto(quartoEdicao);
+        }
+        
+        FecharModal();
+        CarregarQuartos();
+    }
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+        quartoEdicao = new();
+    }
+
+    private string GetStatusClass(StatusQuarto status)
+    {
+        return status switch
+        {
+            StatusQuarto.Disponivel => "disponivel",
+            StatusQuarto.Ocupado => "ocupado",
+            StatusQuarto.Limpeza => "limpeza",
+            StatusQuarto.Manutencao => "manutencao",
+            _ => ""
+        };
+    }
+
+    private string GetStatusTexto(StatusQuarto status)
+    {
+        return status switch
+        {
+            StatusQuarto.Disponivel => "Disponível",
+            StatusQuarto.Ocupado => "Ocupado",
+            StatusQuarto.Limpeza => "Limpeza",
+            StatusQuarto.Manutencao => "Manutenção",
+            _ => ""
+        };
+    }
+
+    private string GetTipoTexto(TipoQuarto tipo)
+    {
+        return tipo switch
+        {
+            TipoQuarto.Standard => "Standard",
+            TipoQuarto.Deluxe => "Deluxe",
+            TipoQuarto.Suite => "Suíte",
+            TipoQuarto.Presidential => "Presidential",
+            _ => ""
+        };
+    }
+}

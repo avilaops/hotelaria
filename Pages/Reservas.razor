@@ -1,0 +1,442 @@
+@page "/reservas"
+@inject ReservaService ReservaService
+@inject QuartoService QuartoService
+@inject HospedeService HospedeService
+
+<PageTitle>Reservas - Hotelaria</PageTitle>
+
+<div class="page-header">
+    <h1>Reservas</h1>
+    <button class="btn btn-primary" @onclick="AbrirModalNovaReserva">
+        ➕ Nova Reserva
+    </button>
+</div>
+
+<div class="filters-section">
+    <div class="filter-group">
+        <label>Data de:</label>
+        <input type="date" @bind="dataInicio" @bind:event="onchange" class="form-control" />
+    </div>
+    
+    <div class="filter-group">
+        <label>Até:</label>
+        <input type="date" @bind="dataFim" @bind:event="onchange" class="form-control" />
+    </div>
+    
+    <div class="filter-group">
+        <label>Status:</label>
+        <select @onchange="FiltrarPorStatus" class="form-control">
+            <option value="">Todos</option>
+            <option value="@StatusReserva.Pendente">Pendente</option>
+            <option value="@StatusReserva.Confirmada">Confirmada</option>
+            <option value="@StatusReserva.CheckInRealizado">Check-in Realizado</option>
+            <option value="@StatusReserva.CheckOutRealizado">Check-out Realizado</option>
+            <option value="@StatusReserva.Cancelada">Cancelada</option>
+        </select>
+    </div>
+    
+    <div class="filter-group search">
+        <label>Buscar:</label>
+        <input type="text" @bind="termoBusca" @bind:event="oninput" 
+               placeholder="Nome do hóspede ou número da reserva" class="form-control" />
+    </div>
+    
+    <button class="btn btn-secondary" @onclick="LimparFiltros">🔄 Limpar</button>
+    <button class="btn btn-primary" @onclick="AplicarFiltros">🔍 Buscar</button>
+</div>
+
+<div class="table-container">
+    <table class="reservas-table">
+        <thead>
+            <tr>
+                <th>Nome do Hóspede</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Quartos</th>
+                <th>Reservado em</th>
+                <th>Status</th>
+                <th>Preço</th>
+                <th>Comissão</th>
+                <th>Nº Reserva</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var reserva in reservasFiltradas.OrderByDescending(r => r.CheckIn))
+            {
+                <tr class="@GetStatusRowClass(reserva.Status)">
+                    <td>
+                        <div class="hospede-info">
+                            <strong>@reserva.Hospede?.Nome</strong>
+                            <span class="guest-badge">Genius</span>
+                            <div class="guest-details">@reserva.NumeroAdultos adulto@(reserva.NumeroAdultos > 1 ? "s" : "")</div>
+                        </div>
+                    </td>
+                    <td>@reserva.CheckIn.ToString("dd 'de' MMM. 'de' yyyy", new System.Globalization.CultureInfo("pt-BR"))</td>
+                    <td>@reserva.CheckOut.ToString("dd 'de' MMM. 'de' yyyy", new System.Globalization.CultureInfo("pt-BR"))</td>
+                    <td>
+                        <div class="quarto-info">
+                            Quarto @reserva.Quarto?.Numero
+                        </div>
+                    </td>
+                    <td>@reserva.DataReserva.ToString("dd 'de' MMM. 'de' yyyy", new System.Globalization.CultureInfo("pt-BR"))</td>
+                    <td>
+                        <span class="status-badge @GetStatusClass(reserva.Status)">
+                            @GetStatusTexto(reserva.Status)
+                            @if (reserva.TipoPagamento == TipoPagamento.TransferenciaBancaria)
+                            {
+                                <br/><small>Pagamento via Booking.com</small>
+                            }
+                        </span>
+                    </td>
+                    <td class="price">€ @reserva.ValorTotal.ToString("N2")<br/><small>Transferência bancária</small></td>
+                    <td class="price">€ @reserva.Comissao.ToString("N2")</td>
+                    <td><a href="#" class="reserva-link">@reserva.NumeroReserva</a></td>
+                    <td>
+                        <div class="action-buttons">
+                            @if (reserva.Status == StatusReserva.Confirmada)
+                            {
+                                <button class="btn btn-sm btn-success" @onclick="() => RealizarCheckIn(reserva)">
+                                    ✅ Check-in
+                                </button>
+                            }
+                            @if (reserva.Status == StatusReserva.CheckInRealizado)
+                            {
+                                <button class="btn btn-sm btn-info" @onclick="() => RealizarCheckOut(reserva)">
+                                    🚪 Check-out
+                                </button>
+                            }
+                            <button class="btn btn-sm btn-secondary" @onclick="() => EditarReserva(reserva)">
+                                ✏️
+                            </button>
+                            @if (reserva.Status != StatusReserva.Cancelada)
+                            {
+                                <button class="btn btn-sm btn-danger" @onclick="() => CancelarReserva(reserva)">
+                                    ❌
+                                </button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    @if (!reservasFiltradas.Any())
+    {
+        <div class="no-data">
+            <p>Nenhuma reserva encontrada com os filtros aplicados.</p>
+        </div>
+    }
+</div>
+
+@if (mostrarModal)
+{
+    <div class="modal-overlay" @onclick="FecharModal">
+        <div class="modal-content large" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>@(reservaEdicao.Id == 0 ? "Nova Reserva" : "Editar Reserva")</h2>
+                <button class="btn-close" @onclick="FecharModal">✖</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Hóspede:</label>
+                        <select @bind="reservaEdicao.HospedeId" class="form-control">
+                            <option value="0">Selecione um hóspede</option>
+                            @foreach (var hospede in HospedeService.ObterTodos())
+                            {
+                                <option value="@hospede.Id">@hospede.Nome</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Quarto:</label>
+                        <select @bind="reservaEdicao.QuartoId" class="form-control">
+                            <option value="0">Selecione um quarto</option>
+                            @foreach (var quarto in QuartoService.ObterDisponiveis())
+                            {
+                                <option value="@quarto.Id">Quarto @quarto.Numero - @quarto.Tipo (€@quarto.PrecoPorNoite/noite)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Check-in:</label>
+                        <input type="date" @bind="reservaEdicao.CheckIn" @bind:event="oninput" class="form-control" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Check-out:</label>
+                        <input type="date" @bind="reservaEdicao.CheckOut" @bind:event="oninput" class="form-control" />
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Adultos:</label>
+                        <input type="number" @bind="reservaEdicao.NumeroAdultos" class="form-control" min="1" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Crianças:</label>
+                        <input type="number" @bind="reservaEdicao.NumeroCriancas" class="form-control" min="0" />
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status:</label>
+                        <select @bind="reservaEdicao.Status" class="form-control">
+                            <option value="@StatusReserva.Pendente">Pendente</option>
+                            <option value="@StatusReserva.Confirmada">Confirmada</option>
+                            <option value="@StatusReserva.CheckInRealizado">Check-in Realizado</option>
+                            <option value="@StatusReserva.CheckOutRealizado">Check-out Realizado</option>
+                            <option value="@StatusReserva.Cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tipo de Pagamento:</label>
+                        <select @bind="reservaEdicao.TipoPagamento" class="form-control">
+                            <option value="@TipoPagamento.TransferenciaBancaria">Transferência Bancária</option>
+                            <option value="@TipoPagamento.CartaoCredito">Cartão de Crédito</option>
+                            <option value="@TipoPagamento.Dinheiro">Dinheiro</option>
+                            <option value="@TipoPagamento.PIX">PIX</option>
+                            <option value="@TipoPagamento.BookingCom">Booking.com</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor Total (€):</label>
+                        <input type="number" step="0.01" @bind="reservaEdicao.ValorTotal" class="form-control" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Comissão (€):</label>
+                        <input type="number" step="0.01" @bind="reservaEdicao.Comissao" class="form-control" />
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Observações:</label>
+                    <textarea @bind="reservaEdicao.Observacoes" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                <button class="btn btn-primary" @onclick="SalvarReserva">Salvar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Reserva> reservasFiltradas = new();
+    private DateTime? dataInicio;
+    private DateTime? dataFim;
+    private string termoBusca = string.Empty;
+    private bool mostrarModal = false;
+    private Reserva reservaEdicao = new();
+
+    protected override void OnInitialized()
+    {
+        dataInicio = new DateTime(2026, 1, 7);
+        dataFim = new DateTime(2026, 1, 8);
+        CarregarReservas();
+    }
+
+    private void CarregarReservas()
+    {
+        reservasFiltradas = ReservaService.ObterTodas();
+    }
+
+    private void AplicarFiltros()
+    {
+        reservasFiltradas = ReservaService.FiltrarPorPeriodo(dataInicio, dataFim);
+        
+        if (!string.IsNullOrWhiteSpace(termoBusca))
+        {
+            if (termoBusca.All(char.IsDigit))
+            {
+                reservasFiltradas = ReservaService.BuscarPorNumeroReserva(termoBusca);
+            }
+            else
+            {
+                reservasFiltradas = ReservaService.BuscarPorHospede(termoBusca);
+            }
+        }
+    }
+
+    private void FiltrarPorStatus(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()))
+        {
+            CarregarReservas();
+        }
+        else
+        {
+            var status = Enum.Parse<StatusReserva>(e.Value.ToString()!);
+            reservasFiltradas = ReservaService.FiltrarPorStatus(status);
+        }
+    }
+
+    private void LimparFiltros()
+    {
+        dataInicio = null;
+        dataFim = null;
+        termoBusca = string.Empty;
+        CarregarReservas();
+    }
+
+    private void AbrirModalNovaReserva()
+    {
+        reservaEdicao = new Reserva
+        {
+            CheckIn = DateTime.Today.AddDays(1),
+            CheckOut = DateTime.Today.AddDays(2),
+            DataReserva = DateTime.Now,
+            Status = StatusReserva.Pendente,
+            NumeroAdultos = 1,
+            TipoPagamento = TipoPagamento.TransferenciaBancaria
+        };
+        mostrarModal = true;
+    }
+
+    private void EditarReserva(Reserva reserva)
+    {
+        reservaEdicao = new Reserva
+        {
+            Id = reserva.Id,
+            NumeroReserva = reserva.NumeroReserva,
+            HospedeId = reserva.HospedeId,
+            QuartoId = reserva.QuartoId,
+            CheckIn = reserva.CheckIn,
+            CheckOut = reserva.CheckOut,
+            DataReserva = reserva.DataReserva,
+            Status = reserva.Status,
+            ValorTotal = reserva.ValorTotal,
+            Comissao = reserva.Comissao,
+            TipoPagamento = reserva.TipoPagamento,
+            NumeroAdultos = reserva.NumeroAdultos,
+            NumeroCriancas = reserva.NumeroCriancas,
+            Observacoes = reserva.Observacoes
+        };
+        mostrarModal = true;
+    }
+
+    private void CalcularValor()
+    {
+        if (reservaEdicao.QuartoId > 0 && reservaEdicao.CheckIn < reservaEdicao.CheckOut)
+        {
+            reservaEdicao.ValorTotal = ReservaService.CalcularValorTotal(
+                reservaEdicao.QuartoId, 
+                reservaEdicao.CheckIn, 
+                reservaEdicao.CheckOut
+            );
+            reservaEdicao.Comissao = reservaEdicao.ValorTotal * 0.15m; // 15% de comissão
+        }
+    }
+
+    private void SalvarReserva()
+    {
+        if (reservaEdicao.HospedeId == 0 || reservaEdicao.QuartoId == 0)
+        {
+            return;
+        }
+
+        if (reservaEdicao.Id == 0)
+        {
+            ReservaService.AdicionarReserva(reservaEdicao);
+        }
+        else
+        {
+            ReservaService.AtualizarReserva(reservaEdicao);
+        }
+        
+        FecharModal();
+        CarregarReservas();
+    }
+
+    private void RealizarCheckIn(Reserva reserva)
+    {
+        reserva.Status = StatusReserva.CheckInRealizado;
+        ReservaService.AtualizarReserva(reserva);
+        
+        var quarto = QuartoService.ObterPorId(reserva.QuartoId);
+        if (quarto != null)
+        {
+            quarto.Status = StatusQuarto.Ocupado;
+            QuartoService.AtualizarQuarto(quarto);
+        }
+        
+        CarregarReservas();
+    }
+
+    private void RealizarCheckOut(Reserva reserva)
+    {
+        reserva.Status = StatusReserva.CheckOutRealizado;
+        ReservaService.AtualizarReserva(reserva);
+        
+        var quarto = QuartoService.ObterPorId(reserva.QuartoId);
+        if (quarto != null)
+        {
+            quarto.Status = StatusQuarto.Limpeza;
+            QuartoService.AtualizarQuarto(quarto);
+        }
+        
+        CarregarReservas();
+    }
+
+    private void CancelarReserva(Reserva reserva)
+    {
+        reserva.Status = StatusReserva.Cancelada;
+        ReservaService.AtualizarReserva(reserva);
+        CarregarReservas();
+    }
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+        reservaEdicao = new();
+    }
+
+    private string GetStatusClass(StatusReserva status)
+    {
+        return status switch
+        {
+            StatusReserva.Confirmada => "confirmada",
+            StatusReserva.Pendente => "pendente",
+            StatusReserva.CheckInRealizado => "checkin",
+            StatusReserva.CheckOutRealizado => "checkout",
+            StatusReserva.Cancelada => "cancelada",
+            _ => ""
+        };
+    }
+
+    private string GetStatusRowClass(StatusReserva status)
+    {
+        return status == StatusReserva.Cancelada ? "row-cancelada" : "";
+    }
+
+    private string GetStatusTexto(StatusReserva status)
+    {
+        return status switch
+        {
+            StatusReserva.Confirmada => "OK",
+            StatusReserva.Pendente => "Pendente",
+            StatusReserva.CheckInRealizado => "Check-in",
+            StatusReserva.CheckOutRealizado => "Check-out",
+            StatusReserva.Cancelada => "Cancelada",
+            StatusReserva.NoShow => "No Show",
+            _ => ""
+        };
+    }
+}

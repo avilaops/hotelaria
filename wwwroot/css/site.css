@@ -1,0 +1,1273 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #003580;
+    --primary-hover: #002451;
+    --secondary-color: #0071c2;
+    --success-color: #008009;
+    --warning-color: #febb02;
+    --danger-color: #d32f2f;
+    --background: #f5f5f5;
+    --white: #ffffff;
+    --text-dark: #262626;
+    --text-light: #6b6b6b;
+    --border-color: #e0e0e0;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    color: var(--text-dark);
+    background-color: var(--background);
+    height: 100%;
+}
+
+/* Layout Principal */
+.page {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background: var(--primary-color);
+    color: var(--white);
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.sidebar .top-row {
+    background: var(--primary-hover);
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .navbar-brand {
+    color: var(--white);
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.sidebar nav {
+    padding: 1rem 0;
+}
+
+.sidebar .nav-item {
+    margin-bottom: 0.25rem;
+}
+
+.sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.sidebar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+}
+
+.sidebar .nav-link.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--white);
+    border-left-color: var(--warning-color);
+}
+
+.sidebar .nav-link .icon {
+    margin-right: 0.75rem;
+    font-size: 1.2rem;
+}
+
+main {
+    margin-left: 250px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-row {
+    background: var(--white);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.content {
+    padding: 2rem;
+    flex: 1;
+}
+
+/* Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+/* Botões */
+.btn {
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-secondary {
+    background: var(--white);
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--background);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: var(--white);
+}
+
+.btn-success:hover {
+    background: #006607;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: var(--white);
+}
+
+.btn-danger:hover {
+    background: #b71c1c;
+}
+
+.btn-info {
+    background: var(--secondary-color);
+    color: var(--white);
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+}
+
+.btn-block {
+    width: 100%;
+    text-align: center;
+}
+
+.btn-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-light);
+    padding: 0;
+}
+
+/* Cards de Estatísticas */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+.stat-card.confirmada {
+    border-left-color: var(--success-color);
+}
+
+.stat-card.checkin {
+    border-left-color: var(--secondary-color);
+}
+
+.stat-card.pendente {
+    border-left-color: var(--warning-color);
+}
+
+.stat-card.receita {
+    border-left-color: var(--success-color);
+}
+
+.stat-card.comissao {
+    border-left-color: var(--danger-color);
+}
+
+.stat-card.liquido {
+    border-left-color: var(--primary-color);
+}
+
+.stat-card.ocupacao {
+    border-left-color: var(--secondary-color);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-content h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.stat-content p {
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.dashboard-section {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.dashboard-section.full-width {
+    grid-column: 1 / -1;
+}
+
+.dashboard-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* Quartos Summary */
+.quartos-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.quarto-status {
+    padding: 1rem;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.quarto-status.disponivel {
+    background: #e8f5e9;
+    color: var(--success-color);
+}
+
+.quarto-status.ocupado {
+    background: #ffebee;
+    color: var(--danger-color);
+}
+
+.quarto-status.limpeza {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.quarto-status.manutencao {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-count {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.status-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Reservas List */
+.reservas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.reserva-item {
+    padding: 1rem;
+    background: var(--background);
+    border-radius: 6px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.reserva-hospede {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.reserva-hospede strong {
+    font-weight: 600;
+}
+
+.reserva-numero {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.reserva-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+/* Financial Summary */
+.financial-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.financial-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--background);
+    border-radius: 6px;
+}
+
+.financial-item .label {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.financial-item .value {
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+/* Filtros */
+.filters-section {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group.search {
+    flex: 1;
+    min-width: 250px;
+}
+
+.filter-group.full-width {
+    flex: 1;
+}
+
+.filter-group label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-dark);
+}
+
+.form-control {
+    padding: 0.625rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    width: 100%;
+    min-width: 150px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 53, 128, 0.1);
+}
+
+/* Quartos Grid */
+.quartos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.quarto-card {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.quarto-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.quarto-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.quarto-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.disponivel {
+    background: #e8f5e9;
+    color: var(--success-color);
+}
+
+.status-badge.ocupado {
+    background: #ffebee;
+    color: var(--danger-color);
+}
+
+.status-badge.limpeza {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.status-badge.manutencao {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-badge.confirmada {
+    background: #e8f5e9;
+    color: var(--success-color);
+}
+
+.status-badge.pendente {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.status-badge.checkin {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-badge.checkout {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.status-badge.cancelada {
+    background: #ffebee;
+    color: var(--danger-color);
+}
+
+.quarto-info {
+    padding: 1rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.info-item .label {
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.info-item .value {
+    font-weight: 600;
+}
+
+.info-item .value.price {
+    color: var(--success-color);
+    font-size: 1.125rem;
+}
+
+.quarto-description {
+    padding: 0 1rem 1rem;
+}
+
+.quarto-description p {
+    color: var(--text-light);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.quarto-amenities {
+    padding: 0 1rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.amenity-tag {
+    background: var(--background);
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-dark);
+}
+
+.amenity-tag.more {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.quarto-actions {
+    padding: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Tabelas */
+.table-container {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+}
+
+.reservas-table,
+.hospedes-table,
+.transacoes-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.reservas-table thead,
+.hospedes-table thead,
+.transacoes-table thead {
+    background: var(--background);
+}
+
+.reservas-table th,
+.hospedes-table th,
+.transacoes-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-dark);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.reservas-table td,
+.hospedes-table td,
+.transacoes-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.875rem;
+}
+
+.reservas-table tbody tr:hover,
+.hospedes-table tbody tr:hover,
+.transacoes-table tbody tr:hover {
+    background: var(--background);
+}
+
+.row-cancelada {
+    opacity: 0.6;
+}
+
+.hospede-info strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.guest-badge {
+    display: inline-block;
+    background: var(--primary-color);
+    color: var(--white);
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+.guest-details {
+    color: var(--text-light);
+    font-size: 0.8125rem;
+}
+
+.quarto-info {
+    font-weight: 500;
+}
+
+.price {
+    font-weight: 600;
+    color: var(--success-color);
+}
+
+.comissao-text {
+    color: var(--danger-color);
+}
+
+.liquido-text {
+    color: var(--primary-color);
+}
+
+.reserva-link {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.reserva-link:hover {
+    text-decoration: underline;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Hóspedes */
+.hospede-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.badge-vip {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: var(--white);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.country-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.reservas-count {
+    background: var(--background);
+    padding: 0.375rem 0.75rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-content.large {
+    max-width: 900px;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Hospede Detalhes */
+.hospede-detalhes {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.info-section h3 {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.info-item .label {
+    color: var(--text-light);
+    font-size: 0.8125rem;
+}
+
+.info-item .value {
+    font-weight: 600;
+}
+
+.reservas-historico {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.reservas-historico th,
+.reservas-historico td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.reservas-historico thead {
+    background: var(--background);
+}
+
+.estatisticas-hospede {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--background);
+    border-radius: 6px;
+}
+
+.estatisticas-hospede .stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.estatisticas-hospede .label {
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+.estatisticas-hospede .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* Disponibilidade */
+.disponibilidade-container {
+    margin-bottom: 2rem;
+}
+
+.disponibilidade-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.quarto-card .quarto-image {
+    height: 180px;
+    background: var(--background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-placeholder {
+    font-size: 4rem;
+}
+
+.quarto-card .quarto-content {
+    padding: 1rem;
+}
+
+.quarto-tipo {
+    color: var(--text-light);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.quarto-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.amenity-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: var(--background);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.preco-total {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.preco-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.preco-info .label {
+    font-weight: 500;
+}
+
+.preco-info .valor {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--success-color);
+}
+
+/* Calendário */
+.calendario-container {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.calendario-container h2 {
+    margin-bottom: 1rem;
+}
+
+.calendario-navegacao {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.calendario-grid {
+    overflow-x: auto;
+}
+
+.calendario-header {
+    display: grid;
+    grid-template-columns: 120px repeat(auto-fill, 50px);
+    border-bottom: 2px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background: var(--white);
+    z-index: 10;
+}
+
+.header-cell {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.75rem;
+    border-right: 1px solid var(--border-color);
+}
+
+.header-cell.hoje {
+    background: var(--warning-color);
+    color: var(--text-dark);
+}
+
+.calendario-linha {
+    display: grid;
+    grid-template-columns: 120px repeat(auto-fill, 50px);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.quarto-cell {
+    padding: 0.75rem;
+    border-right: 1px solid var(--border-color);
+    background: var(--background);
+}
+
+.quarto-cell strong {
+    display: block;
+    font-weight: 600;
+}
+
+.quarto-cell small {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.dia-cell {
+    padding: 0.5rem;
+    border-right: 1px solid var(--border-color);
+    min-height: 60px;
+    font-size: 0.7rem;
+}
+
+.dia-cell.disponivel {
+    background: #e8f5e9;
+}
+
+.dia-cell.ocupado {
+    background: #ffebee;
+}
+
+.dia-cell.manutencao {
+    background: #e3f2fd;
+}
+
+.dia-cell.hoje {
+    border: 2px solid var(--warning-color);
+}
+
+.reserva-info {
+    font-weight: 600;
+    color: var(--danger-color);
+}
+
+.legenda {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.legenda-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.legenda-item .cor {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.legenda-item .cor.disponivel {
+    background: #e8f5e9;
+}
+
+.legenda-item .cor.ocupado {
+    background: #ffebee;
+}
+
+.legenda-item .cor.manutencao {
+    background: #e3f2fd;
+}
+
+.legenda-item .cor.hoje {
+    background: var(--warning-color);
+}
+
+/* Financeiro */
+.pagamentos-lista,
+.quartos-receita {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.pagamento-item,
+.receita-item {
+    padding: 1rem;
+    background: var(--background);
+    border-radius: 6px;
+}
+
+.pagamento-info,
+.receita-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.tipo {
+    font-weight: 600;
+}
+
+.valor {
+    font-weight: 700;
+    color: var(--success-color);
+}
+
+.pagamento-barra {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.barra-progresso {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.3s;
+}
+
+.receita-detalhes {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.ticket-medio {
+    font-weight: 500;
+}
+
+.estatisticas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.estatistica-card {
+    padding: 1rem;
+    background: var(--background);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.estatistica-card .label {
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+.estatistica-card .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.top-hospedes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.hospede-ranking {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--background);
+    border-radius: 6px;
+}
+
+.hospede-nome {
+    font-weight: 600;
+}
+
+.hospede-valor {
+    font-weight: 700;
+    color: var(--success-color);
+}
+
+/* Utilitários */
+.no-data {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-light);
+}
+
+#blazor-error-ui {
+    background: var(--danger-color);
+    color: var(--white);
+    padding: 1rem;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+    display: none;
+}
+
+#blazor-error-ui .reload,
+#blazor-error-ui .dismiss {
+    color: var(--white);
+    text-decoration: underline;
+    cursor: pointer;
+    margin: 0 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+    }
+
+    main {
+        margin-left: 0;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .filters-section {
+        flex-direction: column;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quartos-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .quartos-grid {
+        grid-template-columns: 1fr;
+    }
+}

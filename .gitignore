@@ -1,0 +1,79 @@
+## bin e obj
+bin/
+obj/
+
+## Visual Studio
+.vs/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.slnx
+
+## Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+## Rider
+.idea/
+*.sln.iml
+
+## .NET Build
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+## Logs
+*.log
+logs/
+
+## Publish
+publish/
+*.pubxml
+*.publishproj
+
+## Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.jpeg
+*.jpg
+*.png
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## Linux
+*~
+
+## Temp
+*.tmp
+*.temp
+*.swp
+*.swo
+
+## Database
+*.db
+*.sqlite
+*.sqlite3
+
+## Secrets
+appsettings.Development.json
+secrets.json
+*.pfx
+
+## Node
+node_modules/
+package-lock.json

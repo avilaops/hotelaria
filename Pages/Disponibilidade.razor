@@ -1,0 +1,230 @@
+@page "/disponibilidade"
+@inject QuartoService QuartoService
+@inject ReservaService ReservaService
+
+<PageTitle>Disponibilidade - Hotelaria</PageTitle>
+
+<div class="page-header">
+    <h1>📅 Disponibilidade de Quartos</h1>
+</div>
+
+<div class="filters-section">
+    <div class="filter-group">
+        <label>Check-in:</label>
+        <input type="date" @bind="dataCheckIn" class="form-control" />
+    </div>
+    
+    <div class="filter-group">
+        <label>Check-out:</label>
+        <input type="date" @bind="dataCheckOut" class="form-control" />
+    </div>
+    
+    <div class="filter-group">
+        <label>Capacidade:</label>
+        <input type="number" @bind="capacidade" class="form-control" min="1" />
+    </div>
+    
+    <button class="btn btn-primary" @onclick="BuscarDisponibilidade">🔍 Buscar</button>
+</div>
+
+<div class="disponibilidade-container">
+    <h2>Quartos Disponíveis</h2>
+    
+    @if (quartosDisponiveis.Any())
+    {
+        <div class="quartos-grid">
+            @foreach (var quarto in quartosDisponiveis)
+            {
+                <div class="quarto-card disponivel">
+                    <div class="quarto-image">
+                        <div class="image-placeholder">🛏️</div>
+                    </div>
+                    
+                    <div class="quarto-content">
+                        <h3>Quarto @quarto.Numero</h3>
+                        <div class="quarto-tipo">@GetTipoTexto(quarto.Tipo)</div>
+                        
+                        <div class="quarto-details">
+                            <div class="detail-item">
+                                <span class="icon">👥</span>
+                                <span>Até @quarto.Capacidade pessoas</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="icon">💰</span>
+                                <span>€ @quarto.PrecoPorNoite.ToString("N2") / noite</span>
+                            </div>
+                        </div>
+                        
+                        <div class="quarto-amenities">
+                            @foreach (var comodidade in quarto.Comodidades.Take(3))
+                            {
+                                <span class="amenity-badge">✓ @comodidade</span>
+                            }
+                        </div>
+                        
+                        @if (dataCheckIn != default && dataCheckOut != default && dataCheckOut > dataCheckIn)
+                        {
+                            var dias = (dataCheckOut - dataCheckIn).Days;
+                            var total = quarto.PrecoPorNoite * dias;
+                            
+                            <div class="preco-total">
+                                <div class="preco-info">
+                                    <span class="label">Total (@dias noite@(dias > 1 ? "s" : "")):</span>
+                                    <span class="valor">€ @total.ToString("N2")</span>
+                                </div>
+                            </div>
+                        }
+                        
+                        <button class="btn btn-success btn-block">Reservar Agora</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="no-data">
+            <p>Nenhum quarto disponível para as datas selecionadas.</p>
+        </div>
+    }
+</div>
+
+<div class="calendario-container">
+    <h2>Calendário de Ocupação - @mesSelecionado.ToString("MMMM yyyy", new System.Globalization.CultureInfo("pt-BR"))</h2>
+    
+    <div class="calendario-navegacao">
+        <button class="btn btn-secondary" @onclick="MesAnterior">← Mês Anterior</button>
+        <button class="btn btn-secondary" @onclick="ProximoMes">Próximo Mês →</button>
+    </div>
+    
+    <div class="calendario-grid">
+        <div class="calendario-header">
+            <div class="header-cell">Quarto</div>
+            @for (int dia = 1; dia <= DateTime.DaysInMonth(mesSelecionado.Year, mesSelecionado.Month); dia++)
+            {
+                var data = new DateTime(mesSelecionado.Year, mesSelecionado.Month, dia);
+                <div class="header-cell @(data.Date == DateTime.Today ? "hoje" : "")">
+                    <div>@data.ToString("ddd", new System.Globalization.CultureInfo("pt-BR"))</div>
+                    <div>@dia</div>
+                </div>
+            }
+        </div>
+        
+        @foreach (var quarto in QuartoService.ObterTodos().OrderBy(q => q.Numero))
+        {
+            <div class="calendario-linha">
+                <div class="quarto-cell">
+                    <strong>@quarto.Numero</strong>
+                    <small>@GetTipoTexto(quarto.Tipo)</small>
+                </div>
+                
+                @for (int dia = 1; dia <= DateTime.DaysInMonth(mesSelecionado.Year, mesSelecionado.Month); dia++)
+                {
+                    var data = new DateTime(mesSelecionado.Year, mesSelecionado.Month, dia);
+                    var reserva = ObterReservaDia(quarto.Id, data);
+                    
+                    <div class="dia-cell @GetCelulaDiaClass(reserva, data)">
+                        @if (reserva != null && reserva.CheckIn.Date == data)
+                        {
+                            <span class="reserva-info" title="@reserva.Hospede?.Nome">
+                                @reserva.Hospede?.Nome?.Split(' ')[0]
+                            </span>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+    
+    <div class="legenda">
+        <div class="legenda-item">
+            <span class="cor disponivel"></span> Disponível
+        </div>
+        <div class="legenda-item">
+            <span class="cor ocupado"></span> Ocupado
+        </div>
+        <div class="legenda-item">
+            <span class="cor manutencao"></span> Manutenção
+        </div>
+        <div class="legenda-item">
+            <span class="cor hoje"></span> Hoje
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Quarto> quartosDisponiveis = new();
+    private DateTime dataCheckIn = DateTime.Today.AddDays(1);
+    private DateTime dataCheckOut = DateTime.Today.AddDays(2);
+    private int capacidade = 2;
+    private DateTime mesSelecionado = DateTime.Today;
+    private List<Reserva> reservasMes = new();
+
+    protected override void OnInitialized()
+    {
+        BuscarDisponibilidade();
+        CarregarReservasMes();
+    }
+
+    private void BuscarDisponibilidade()
+    {
+        if (dataCheckOut > dataCheckIn)
+        {
+            quartosDisponiveis = QuartoService.BuscarQuartosDisponiveis(dataCheckIn, dataCheckOut, capacidade);
+        }
+    }
+
+    private void CarregarReservasMes()
+    {
+        var inicioMes = new DateTime(mesSelecionado.Year, mesSelecionado.Month, 1);
+        var fimMes = inicioMes.AddMonths(1).AddDays(-1);
+        
+        reservasMes = ReservaService.ObterTodas()
+            .Where(r => (r.CheckIn <= fimMes && r.CheckOut >= inicioMes) && 
+                   (r.Status == StatusReserva.Confirmada || r.Status == StatusReserva.CheckInRealizado))
+            .ToList();
+    }
+
+    private void MesAnterior()
+    {
+        mesSelecionado = mesSelecionado.AddMonths(-1);
+        CarregarReservasMes();
+    }
+
+    private void ProximoMes()
+    {
+        mesSelecionado = mesSelecionado.AddMonths(1);
+        CarregarReservasMes();
+    }
+
+    private Reserva? ObterReservaDia(int quartoId, DateTime data)
+    {
+        return reservasMes.FirstOrDefault(r => 
+            r.QuartoId == quartoId && 
+            r.CheckIn.Date <= data && 
+            r.CheckOut.Date > data);
+    }
+
+    private string GetCelulaDiaClass(Reserva? reserva, DateTime data)
+    {
+        if (data.Date == DateTime.Today)
+            return "hoje";
+        
+        if (reserva != null)
+            return "ocupado";
+        
+        return "disponivel";
+    }
+
+    private string GetTipoTexto(TipoQuarto tipo)
+    {
+        return tipo switch
+        {
+            TipoQuarto.Standard => "Standard",
+            TipoQuarto.Deluxe => "Deluxe",
+            TipoQuarto.Suite => "Suíte",
+            TipoQuarto.Presidential => "Presidential",
+            _ => ""
+        };
+    }
+}

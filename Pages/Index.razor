@@ -1,0 +1,194 @@
+@page "/"
+@inject ReservaService ReservaService
+@inject QuartoService QuartoService
+@inject HospedeService HospedeService
+
+<PageTitle>Dashboard - Hotelaria</PageTitle>
+
+<div class="dashboard">
+    <h1>Dashboard</h1>
+    
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-content">
+                <h3>@estatisticas["Total"]</h3>
+                <p>Total de Reservas</p>
+            </div>
+        </div>
+        
+        <div class="stat-card confirmada">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+                <h3>@estatisticas["Confirmadas"]</h3>
+                <p>Confirmadas</p>
+            </div>
+        </div>
+        
+        <div class="stat-card checkin">
+            <div class="stat-icon">🔑</div>
+            <div class="stat-content">
+                <h3>@estatisticas["CheckIn"]</h3>
+                <p>Check-in Realizados</p>
+            </div>
+        </div>
+        
+        <div class="stat-card pendente">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-content">
+                <h3>@estatisticas["Pendentes"]</h3>
+                <p>Pendentes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-section">
+            <h2>Quartos</h2>
+            <div class="quartos-summary">
+                <div class="quarto-status disponivel">
+                    <span class="status-count">@quartosDisponiveis</span>
+                    <span class="status-label">Disponíveis</span>
+                </div>
+                <div class="quarto-status ocupado">
+                    <span class="status-count">@quartosOcupados</span>
+                    <span class="status-label">Ocupados</span>
+                </div>
+                <div class="quarto-status limpeza">
+                    <span class="status-count">@quartosLimpeza</span>
+                    <span class="status-label">Limpeza</span>
+                </div>
+                <div class="quarto-status manutencao">
+                    <span class="status-count">@quartosManutencao</span>
+                    <span class="status-label">Manutenção</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Próximos Check-ins</h2>
+            <div class="reservas-list">
+                @if (proximosCheckIns.Any())
+                {
+                    @foreach (var reserva in proximosCheckIns)
+                    {
+                        <div class="reserva-item">
+                            <div class="reserva-hospede">
+                                <strong>@reserva.Hospede?.Nome</strong>
+                                <span class="reserva-numero">#@reserva.NumeroReserva</span>
+                            </div>
+                            <div class="reserva-info">
+                                <span>Quarto: @reserva.Quarto?.Numero</span>
+                                <span>@reserva.CheckIn.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="no-data">Nenhum check-in próximo</p>
+                }
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Check-outs Hoje</h2>
+            <div class="reservas-list">
+                @if (checkOutsHoje.Any())
+                {
+                    @foreach (var reserva in checkOutsHoje)
+                    {
+                        <div class="reserva-item">
+                            <div class="reserva-hospede">
+                                <strong>@reserva.Hospede?.Nome</strong>
+                                <span class="reserva-numero">#@reserva.NumeroReserva</span>
+                            </div>
+                            <div class="reserva-info">
+                                <span>Quarto: @reserva.Quarto?.Numero</span>
+                                <span>@reserva.CheckOut.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="no-data">Nenhum check-out hoje</p>
+                }
+            </div>
+        </div>
+
+        <div class="dashboard-section full-width">
+            <h2>Resumo Financeiro</h2>
+            <div class="financial-summary">
+                <div class="financial-item">
+                    <span class="label">Receita Total (Mês)</span>
+                    <span class="value">€ @receitaMensal.ToString("N2")</span>
+                </div>
+                <div class="financial-item">
+                    <span class="label">Comissões</span>
+                    <span class="value">€ @comissoesMensais.ToString("N2")</span>
+                </div>
+                <div class="financial-item">
+                    <span class="label">Taxa de Ocupação</span>
+                    <span class="value">@taxaOcupacao.ToString("N1")%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Dictionary<string, int> estatisticas = new();
+    private List<Reserva> proximosCheckIns = new();
+    private List<Reserva> checkOutsHoje = new();
+    private int quartosDisponiveis = 0;
+    private int quartosOcupados = 0;
+    private int quartosLimpeza = 0;
+    private int quartosManutencao = 0;
+    private decimal receitaMensal = 0;
+    private decimal comissoesMensais = 0;
+    private decimal taxaOcupacao = 0;
+
+    protected override void OnInitialized()
+    {
+        CarregarDados();
+    }
+
+    private void CarregarDados()
+    {
+        estatisticas = ReservaService.ObterEstatisticas();
+        
+        var todasReservas = ReservaService.ObterTodas();
+        var hoje = DateTime.Today;
+        var amanha = hoje.AddDays(1);
+
+        proximosCheckIns = todasReservas
+            .Where(r => r.CheckIn >= hoje && r.CheckIn <= amanha && 
+                   (r.Status == StatusReserva.Confirmada || r.Status == StatusReserva.Pendente))
+            .OrderBy(r => r.CheckIn)
+            .Take(5)
+            .ToList();
+
+        checkOutsHoje = todasReservas
+            .Where(r => r.CheckOut.Date == hoje && r.Status == StatusReserva.CheckInRealizado)
+            .OrderBy(r => r.CheckOut)
+            .Take(5)
+            .ToList();
+
+        var quartos = QuartoService.ObterTodos();
+        quartosDisponiveis = quartos.Count(q => q.Status == StatusQuarto.Disponivel);
+        quartosOcupados = quartos.Count(q => q.Status == StatusQuarto.Ocupado);
+        quartosLimpeza = quartos.Count(q => q.Status == StatusQuarto.Limpeza);
+        quartosManutencao = quartos.Count(q => q.Status == StatusQuarto.Manutencao);
+
+        var inicioMes = new DateTime(hoje.Year, hoje.Month, 1);
+        var reservasMes = todasReservas.Where(r => r.DataReserva >= inicioMes).ToList();
+        receitaMensal = reservasMes.Sum(r => r.ValorTotal);
+        comissoesMensais = reservasMes.Sum(r => r.Comissao);
+
+        if (quartos.Count > 0)
+        {
+            taxaOcupacao = ((decimal)quartosOcupados / quartos.Count) * 100;
+        }
+    }
+}

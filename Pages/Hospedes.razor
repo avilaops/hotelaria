@@ -1,0 +1,412 @@
+@page "/hospedes"
+@inject HospedeService HospedeService
+@inject ReservaService ReservaService
+
+<PageTitle>Hóspedes - Hotelaria</PageTitle>
+
+<div class="page-header">
+    <h1>Gerenciamento de Hóspedes</h1>
+    <button class="btn btn-primary" @onclick="AbrirModalNovoHospede">
+        ➕ Novo Hóspede
+    </button>
+</div>
+
+<div class="filters-section">
+    <div class="filter-group search full-width">
+        <label>Buscar:</label>
+        <input type="text" @bind="termoBusca" @bind:event="oninput" @onchange="BuscarHospedes" 
+               placeholder="Nome, e-mail ou documento" class="form-control" />
+    </div>
+</div>
+
+<div class="table-container">
+    <table class="hospedes-table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Telefone</th>
+                <th>Documento</th>
+                <th>País</th>
+                <th>Data Cadastro</th>
+                <th>Reservas</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var hospede in hospedesFiltrados)
+            {
+                <tr>
+                    <td>
+                        <div class="hospede-name">
+                            <strong>@hospede.Nome</strong>
+                            @if (ObterNumeroReservas(hospede.Id) > 0)
+                            {
+                                <span class="badge-vip">⭐ VIP</span>
+                            }
+                        </div>
+                    </td>
+                    <td>@hospede.Email</td>
+                    <td>@hospede.Telefone</td>
+                    <td>@hospede.Documento</td>
+                    <td>
+                        <span class="country-badge">@ObterBandeira(hospede.Pais) @hospede.Pais</span>
+                    </td>
+                    <td>@hospede.DataCadastro.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <span class="reservas-count">
+                            @ObterNumeroReservas(hospede.Id) reserva@(ObterNumeroReservas(hospede.Id) != 1 ? "s" : "")
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-info" @onclick="() => VisualizarHospede(hospede)">
+                                👁️ Ver
+                            </button>
+                            <button class="btn btn-sm btn-secondary" @onclick="() => EditarHospede(hospede)">
+                                ✏️ Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => RemoverHospede(hospede)">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    @if (!hospedesFiltrados.Any())
+    {
+        <div class="no-data">
+            <p>Nenhum hóspede encontrado.</p>
+        </div>
+    }
+</div>
+
+@if (mostrarModal)
+{
+    <div class="modal-overlay" @onclick="FecharModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>@(hospedeEdicao.Id == 0 ? "Novo Hóspede" : "Editar Hóspede")</h2>
+                <button class="btn-close" @onclick="FecharModal">✖</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nome Completo:</label>
+                    <input type="text" @bind="hospedeEdicao.Nome" class="form-control" />
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>E-mail:</label>
+                        <input type="email" @bind="hospedeEdicao.Email" class="form-control" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Telefone:</label>
+                        <input type="tel" @bind="hospedeEdicao.Telefone" class="form-control" />
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Documento:</label>
+                        <input type="text" @bind="hospedeEdicao.Documento" class="form-control" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>País:</label>
+                        <select @bind="hospedeEdicao.Pais" class="form-control">
+                            <option value="">Selecione</option>
+                            <option value="Brasil">Brasil</option>
+                            <option value="Portugal">Portugal</option>
+                            <option value="Espanha">Espanha</option>
+                            <option value="Estados Unidos">Estados Unidos</option>
+                            <option value="Reino Unido">Reino Unido</option>
+                            <option value="França">França</option>
+                            <option value="Alemanha">Alemanha</option>
+                            <option value="Itália">Itália</option>
+                            <option value="Argentina">Argentina</option>
+                            <option value="Chile">Chile</option>
+                            <option value="Colômbia">Colômbia</option>
+                            <option value="México">México</option>
+                            <option value="Canadá">Canadá</option>
+                            <option value="Austrália">Austrália</option>
+                            <option value="Índia">Índia</option>
+                            <option value="China">China</option>
+                            <option value="Japão">Japão</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="FecharModal">Cancelar</button>
+                <button class="btn btn-primary" @onclick="SalvarHospede">Salvar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarModalDetalhes)
+{
+    <div class="modal-overlay" @onclick="FecharModalDetalhes">
+        <div class="modal-content large" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2>Detalhes do Hóspede</h2>
+                <button class="btn-close" @onclick="FecharModalDetalhes">✖</button>
+            </div>
+            
+            <div class="modal-body">
+                @if (hospedeDetalhes != null)
+                {
+                    <div class="hospede-detalhes">
+                        <div class="info-section">
+                            <h3>Informações Pessoais</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="label">Nome:</span>
+                                    <span class="value">@hospedeDetalhes.Nome</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">E-mail:</span>
+                                    <span class="value">@hospedeDetalhes.Email</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Telefone:</span>
+                                    <span class="value">@hospedeDetalhes.Telefone</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Documento:</span>
+                                    <span class="value">@hospedeDetalhes.Documento</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">País:</span>
+                                    <span class="value">@ObterBandeira(hospedeDetalhes.Pais) @hospedeDetalhes.Pais</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Cadastrado em:</span>
+                                    <span class="value">@hospedeDetalhes.DataCadastro.ToString("dd/MM/yyyy")</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3>Histórico de Reservas</h3>
+                            @if (reservasHospede.Any())
+                            {
+                                <table class="reservas-historico">
+                                    <thead>
+                                        <tr>
+                                            <th>Nº Reserva</th>
+                                            <th>Check-in</th>
+                                            <th>Check-out</th>
+                                            <th>Quarto</th>
+                                            <th>Status</th>
+                                            <th>Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var reserva in reservasHospede.OrderByDescending(r => r.CheckIn))
+                                        {
+                                            <tr>
+                                                <td>@reserva.NumeroReserva</td>
+                                                <td>@reserva.CheckIn.ToString("dd/MM/yyyy")</td>
+                                                <td>@reserva.CheckOut.ToString("dd/MM/yyyy")</td>
+                                                <td>@reserva.Quarto?.Numero</td>
+                                                <td>
+                                                    <span class="status-badge @GetStatusClass(reserva.Status)">
+                                                        @GetStatusTexto(reserva.Status)
+                                                    </span>
+                                                </td>
+                                                <td>€ @reserva.ValorTotal.ToString("N2")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                
+                                <div class="estatisticas-hospede">
+                                    <div class="stat-item">
+                                        <span class="label">Total de Reservas:</span>
+                                        <span class="value">@reservasHospede.Count</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Total Gasto:</span>
+                                        <span class="value">€ @reservasHospede.Sum(r => r.ValorTotal).ToString("N2")</span>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="no-data">Nenhuma reserva encontrada.</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="FecharModalDetalhes">Fechar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Hospede> hospedesFiltrados = new();
+    private string termoBusca = string.Empty;
+    private bool mostrarModal = false;
+    private bool mostrarModalDetalhes = false;
+    private Hospede hospedeEdicao = new();
+    private Hospede? hospedeDetalhes;
+    private List<Reserva> reservasHospede = new();
+
+    protected override void OnInitialized()
+    {
+        CarregarHospedes();
+    }
+
+    private void CarregarHospedes()
+    {
+        hospedesFiltrados = HospedeService.ObterTodos();
+    }
+
+    private void BuscarHospedes()
+    {
+        hospedesFiltrados = HospedeService.Buscar(termoBusca);
+    }
+
+    private void AbrirModalNovoHospede()
+    {
+        hospedeEdicao = new Hospede();
+        mostrarModal = true;
+    }
+
+    private void EditarHospede(Hospede hospede)
+    {
+        hospedeEdicao = new Hospede
+        {
+            Id = hospede.Id,
+            Nome = hospede.Nome,
+            Email = hospede.Email,
+            Telefone = hospede.Telefone,
+            Documento = hospede.Documento,
+            Pais = hospede.Pais,
+            DataCadastro = hospede.DataCadastro
+        };
+        mostrarModal = true;
+    }
+
+    private void VisualizarHospede(Hospede hospede)
+    {
+        hospedeDetalhes = hospede;
+        reservasHospede = ReservaService.ObterTodas()
+            .Where(r => r.HospedeId == hospede.Id)
+            .ToList();
+        mostrarModalDetalhes = true;
+    }
+
+    private void SalvarHospede()
+    {
+        if (string.IsNullOrWhiteSpace(hospedeEdicao.Nome) || string.IsNullOrWhiteSpace(hospedeEdicao.Email))
+        {
+            return;
+        }
+
+        if (hospedeEdicao.Id == 0)
+        {
+            HospedeService.AdicionarHospede(hospedeEdicao);
+        }
+        else
+        {
+            HospedeService.AtualizarHospede(hospedeEdicao);
+        }
+        
+        FecharModal();
+        CarregarHospedes();
+    }
+
+    private void RemoverHospede(Hospede hospede)
+    {
+        var temReservas = ReservaService.ObterTodas().Any(r => r.HospedeId == hospede.Id);
+        
+        if (!temReservas)
+        {
+            HospedeService.RemoverHospede(hospede.Id);
+            CarregarHospedes();
+        }
+    }
+
+    private void FecharModal()
+    {
+        mostrarModal = false;
+        hospedeEdicao = new();
+    }
+
+    private void FecharModalDetalhes()
+    {
+        mostrarModalDetalhes = false;
+        hospedeDetalhes = null;
+        reservasHospede = new();
+    }
+
+    private int ObterNumeroReservas(int hospedeId)
+    {
+        return ReservaService.ObterTodas().Count(r => r.HospedeId == hospedeId);
+    }
+
+    private string ObterBandeira(string pais)
+    {
+        return pais switch
+        {
+            "Brasil" => "🇧🇷",
+            "Portugal" => "🇵🇹",
+            "Espanha" => "🇪🇸",
+            "Estados Unidos" => "🇺🇸",
+            "Reino Unido" => "🇬🇧",
+            "França" => "🇫🇷",
+            "Alemanha" => "🇩🇪",
+            "Itália" => "🇮🇹",
+            "Argentina" => "🇦🇷",
+            "Chile" => "🇨🇱",
+            "Colômbia" => "🇨🇴",
+            "México" => "🇲🇽",
+            "Canadá" => "🇨🇦",
+            "Austrália" => "🇦🇺",
+            "Índia" => "🇮🇳",
+            "China" => "🇨🇳",
+            "Japão" => "🇯🇵",
+            _ => "🌍"
+        };
+    }
+
+    private string GetStatusClass(StatusReserva status)
+    {
+        return status switch
+        {
+            StatusReserva.Confirmada => "confirmada",
+            StatusReserva.Pendente => "pendente",
+            StatusReserva.CheckInRealizado => "checkin",
+            StatusReserva.CheckOutRealizado => "checkout",
+            StatusReserva.Cancelada => "cancelada",
+            _ => ""
+        };
+    }
+
+    private string GetStatusTexto(StatusReserva status)
+    {
+        return status switch
+        {
+            StatusReserva.Confirmada => "Confirmada",
+            StatusReserva.Pendente => "Pendente",
+            StatusReserva.CheckInRealizado => "Check-in",
+            StatusReserva.CheckOutRealizado => "Check-out",
+            StatusReserva.Cancelada => "Cancelada",
+            StatusReserva.NoShow => "No Show",
+            _ => ""
+        };
+    }
+}
