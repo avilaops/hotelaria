@@ -99,16 +99,17 @@ jobs:
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-      continue-on-error: true
         
-    - name: 🚀 Deploy to Azure Web App (Publish Profile)
+    - name: 🚀 Deploy to Azure Web App
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-      continue-on-error: false
+        
+    - name: 🔓 Azure Logout
+      run: az logout
+      if: always()
         
     - name: ✅ Deployment Summary
       if: always()
@@ -116,12 +117,8 @@ jobs:
         echo "## Deployment Summary 🚀" >> $GITHUB_STEP_SUMMARY
         echo "- **Environment:** Production" >> $GITHUB_STEP_SUMMARY
         echo "- **App Name:** ${{ env.AZURE_WEBAPP_NAME }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **URL:** https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net" >> $GITHUB_STEP_SUMMARY
         echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-        if [ "${{ steps.deploy-to-webapp.outcome }}" == "success" ]; then
-          echo "- **URL:** https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "- **Error:** Deployment failed. Check publish profile or Azure credentials." >> $GITHUB_STEP_SUMMARY
-        fi
 
   # ============================================
   # JOB 3: HEALTH CHECK
