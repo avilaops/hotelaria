@@ -97,7 +97,7 @@
                     <div class="credential">
                         <span class="role">Desenvolvedor</span>
                         <span class="separator">·</span>
-                        <code>nicolasrosaab / 7Aciqgr7@</code>
+                        <code>nicolasrosaab / 7Aciqgr7@@</code>
                     </div>
                     <div class="credential">
                         <span class="role">Admin</span>
@@ -155,7 +155,11 @@
 
     private string GetBloqueioMessage()
     {
-        return $"🔒 Conta bloqueada até {bloqueadoAte.Value:HH:mm:ss}";
+        if (bloqueadoAte.HasValue)
+        {
+            return $"🔒 Conta bloqueada até {bloqueadoAte.Value:HH:mm:ss}";
+        }
+        return string.Empty;
     }
 
     private async Task RealizarLogin()
