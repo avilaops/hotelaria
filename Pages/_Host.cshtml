@@ -31,7 +31,13 @@
         <a class="dismiss">🗙</a>
     </div>
 
-    <script src="_framework/blazor.server.js"></script>
+    <!-- Carregar Blazor apenas UMA vez -->
+    <script src="_framework/blazor.server.js" autostart="false"></script>
+    
+    <!-- Script de inicialização controlada -->
+    <script src="js/blazor-init.js"></script>
+    
+    <!-- Scripts auxiliares (carregar DEPOIS do Blazor) -->
     <script src="js/session.js"></script>
     <script src="js/download.js"></script>
     <script src="js/mobile.js"></script>
