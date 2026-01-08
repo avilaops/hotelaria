@@ -220,6 +220,35 @@ docker build -t hotelaria .
 docker run -d -p 8080:80 hotelaria
 ```
 
+### Azure App Service
+
+**Deploy Rápido (5 minutos):**
+
+1. **Portal Azure** → Criar Web App
+2. **Configuração:**
+   - Nome: `hotelaria-app`
+   - Runtime: `.NET 8`
+   - Plano: `B1` (R$ ~55/mês)
+   - Região: `Brazil South`
+3. **Deployment:** Conectar GitHub (avilaops/hotelaria)
+4. **Acessar:** `https://hotelaria-app.azurewebsites.net`
+
+📖 **Guias de Deploy:**
+- [Guia Completo Azure](docs/AZURE-DEPLOY.md) - Todos os métodos e configurações
+- [Quick Start Azure](docs/AZURE-QUICKSTART.md) - Deploy em 5 minutos
+- [Deploy via CLI](docs/AZURE-DEPLOY.md#método-2-deploy-via-azure-cli-avançado)
+- [Deploy Automático via GitHub Actions](docs/AZURE-DEPLOY.md#método-3-deploy-automatizado-via-github-actions-recomendado)
+
+### Render
+
+📖 Ver [Guia de Deploy no Render](docs/RENDER-DEPLOY.md) para instruções detalhadas.
+
+### Outras Plataformas
+
+- **Heroku**: Suporte via Dockerfile
+- **AWS Elastic Beanstalk**: Suporte para .NET 8
+- **Google Cloud Run**: Container pronto para deploy
+
 ## 🤝 Contribuindo
 
 Contribuições são bem-vindas! Para contribuir:

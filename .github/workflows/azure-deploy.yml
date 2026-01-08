@@ -1,0 +1,55 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: hotelaria-app    # Substitua pelo nome do seu App Service
+  DOTNET_VERSION: '8.0.x'
+  DOTNET_CONFIGURATION: Release
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: 📦 Restore dependencies
+      run: dotnet restore
+    
+    - name: 🏗️ Build
+      run: dotnet build --configuration ${{ env.DOTNET_CONFIGURATION }} --no-restore
+    
+    - name: 🧪 Run tests
+      run: dotnet test --configuration ${{ env.DOTNET_CONFIGURATION }} --no-build --verbosity normal
+    
+    - name: 📤 Publish
+      run: dotnet publish --configuration ${{ env.DOTNET_CONFIGURATION }} --no-build --output ./publish
+    
+    - name: 🚀 Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ./publish
+    
+    - name: ✅ Deployment successful
+      if: success()
+      run: |
+        echo "🎉 Deploy concluído com sucesso!"
+        echo "URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+    
+    - name: ❌ Deployment failed
+      if: failure()
+      run: |
+        echo "❌ Deploy falhou. Verifique os logs acima."
+        exit 1
