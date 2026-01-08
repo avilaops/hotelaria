@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/license-Proprietary-red.svg)](LICENSE)
 [![Build Status](https://github.com/avilaops/hotelaria/actions/workflows/dotnet.yml/badge.svg)](https://github.com/avilaops/hotelaria/actions)
 [![Staging](https://github.com/avilaops/hotelaria/actions/workflows/staging.yml/badge.svg)](https://github.com/avilaops/hotelaria/actions)
+[![CodeQL](https://github.com/avilaops/hotelaria/actions/workflows/codeql.yml/badge.svg)](https://github.com/avilaops/hotelaria/actions/workflows/codeql.yml)
 
 Sistema completo de gestão hoteleira desenvolvido com ASP.NET Core Blazor Server, similar ao painel de controle do Booking.com. Gerencie reservas, quartos, hóspedes e finanças de forma moderna e eficiente.
 

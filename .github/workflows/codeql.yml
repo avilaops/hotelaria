@@ -1,0 +1,109 @@
+name: "🔍 CodeQL Security Analysis"
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    # Executar às 23:32 UTC todo sábado
+    - cron: '32 23 * * 6'
+  workflow_dispatch: # Permite execução manual
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # 6 horas
+    
+    permissions:
+      # Necessário para escrever eventos de segurança
+      security-events: write
+      # Necessário para buscar pacotes CodeQL privados
+      packages: read
+      # Necessário para workflows em repositórios privados
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        # GitHub Actions workflows
+        - language: actions
+          build-mode: none
+          
+        # C# / Blazor Server
+        - language: csharp
+          build-mode: autobuild
+          
+        # JavaScript (incluindo wwwroot/js/*.js)
+        - language: javascript-typescript
+          build-mode: none
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Histórico completo para análise
+
+    # Setup .NET para análise de C#
+    - name: ⚙️ Setup .NET
+      if: matrix.language == 'csharp'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    # Restaurar dependências antes da análise
+    - name: 📦 Restore dependencies
+      if: matrix.language == 'csharp'
+      run: dotnet restore
+
+    # Inicializar CodeQL
+    - name: 🔍 Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
+        # Queries recomendadas de segurança
+        queries: security-extended,security-and-quality
+        # Configurações adicionais
+        config: |
+          paths-ignore:
+            - '**/obj/**'
+            - '**/bin/**'
+            - '**/*.Designer.cs'
+            - '**/node_modules/**'
+            - '**/wwwroot/lib/**'
+
+    # Build manual se necessário (para C#)
+    - name: 🔨 Build project
+      if: matrix.language == 'csharp' && matrix.build-mode == 'manual'
+      run: |
+        dotnet build --configuration Release --no-restore
+
+    # Autobuild para linguagens que precisam
+    - name: 🤖 Autobuild
+      if: matrix.build-mode == 'autobuild'
+      uses: github/codeql-action/autobuild@v3
+
+    # Executar análise do CodeQL
+    - name: 🔍 Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{ matrix.language }}"
+        upload: true
+        # Fail se encontrar vulnerabilidades críticas
+        # fail-on: critical
+
+    # Gerar resumo da análise
+    - name: 📊 Analysis Summary
+      if: always()
+      run: |
+        echo "## CodeQL Analysis Summary 🔍" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Language:** ${{ matrix.language }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Mode:** ${{ matrix.build-mode }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "View results in the [Security tab](https://github.com/${{ github.repository }}/security/code-scanning)" >> $GITHUB_STEP_SUMMARY

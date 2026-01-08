@@ -1,0 +1,78 @@
+# 🔍 CodeQL Configuration for Hotelaria
+# https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning
+
+name: "Hotelaria Security Analysis"
+
+# Disable default queries
+disable-default-queries: false
+
+# Query packs
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Paths to ignore
+paths-ignore:
+  # Build outputs
+  - '**/obj/**'
+  - '**/bin/**'
+  
+  # Generated files
+  - '**/*.Designer.cs'
+  - '**/*.g.cs'
+  - '**/*.generated.cs'
+  
+  # Dependencies
+  - '**/node_modules/**'
+  - '**/wwwroot/lib/**'
+  - '**/packages/**'
+  
+  # Docs and config
+  - 'docs/**'
+  - '*.md'
+  - '.vscode/**'
+  - '.github/**'
+  
+  # Docker
+  - 'Dockerfile'
+  - 'docker-compose.yml'
+
+# Paths to analyze
+paths:
+  - 'Pages/**'
+  - 'Services/**'
+  - 'Models/**'
+  - 'Shared/**'
+  - 'wwwroot/js/**'
+  - 'wwwroot/css/**'
+  - 'Program.cs'
+  - '*.csproj'
+
+# Query filters
+query-filters:
+  # Exclude low severity
+  - exclude:
+      problem.severity: note
+  
+  # Include high and critical
+  - include:
+      problem.severity: 
+        - error
+        - warning
+
+# Specific language configurations
+csharp:
+  # Use C# 11 features
+  version: "11.0"
+  
+  # Additional build arguments
+  buildargs:
+    - "/p:Configuration=Release"
+    - "/p:TreatWarningsAsErrors=false"
+
+javascript:
+  # Analyze ES6+ syntax
+  version: "es2022"
+  
+  # Include TypeScript if used in future
+  typescript: true
