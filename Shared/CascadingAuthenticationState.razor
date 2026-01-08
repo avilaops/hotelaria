@@ -1,0 +1,30 @@
+@inject AuthService AuthService
+@implements IDisposable
+
+<CascadingValue Value="@IsAuthenticated">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool IsAuthenticated { get; set; }
+
+    protected override void OnInitialized()
+    {
+        IsAuthenticated = AuthService.EstaAutenticado();
+        AuthService.OnAuthStateChanged += UpdateAuthenticationState;
+    }
+
+    private void UpdateAuthenticationState()
+    {
+        IsAuthenticated = AuthService.EstaAutenticado();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnAuthStateChanged -= UpdateAuthenticationState;
+    }
+}

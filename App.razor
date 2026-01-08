@@ -1,12 +1,47 @@
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Não encontrado</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Desculpe, não há nada neste endereço.</p>
-        </LayoutView>
-    </NotFound>
-</Router>
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+<CascadingValue Value="@AuthService">
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    <RedirectToLogin />
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Não encontrado - Hotelaria</PageTitle>
+            @if (AuthService.EstaAutenticado())
+            {
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <div class="not-found">
+                        <h1>404</h1>
+                        <p role="alert">Desculpe, não há nada neste endereço.</p>
+                        <a href="/" class="btn btn-primary">Voltar à Página Principal</a>
+                    </div>
+                </LayoutView>
+            }
+            else
+            {
+                <RedirectToLogin />
+            }
+        </NotFound>
+    </Router>
+</CascadingValue>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Verificar se está na página de login
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var isLoginPage = uri.LocalPath.Contains("/login");
+        
+        // Se não está autenticado e não está na página de login, redirecionar
+        if (!isLoginPage && !AuthService.EstaAutenticado())
+        {
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+    }
+}

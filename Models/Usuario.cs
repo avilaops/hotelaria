@@ -16,10 +16,11 @@ namespace Hotelaria.Models
 
     public enum PerfilUsuario
     {
-        Administrador,
-        Gerente,
-        Recepcionista,
-        Visualizador
+        Desenvolvedor,      // Permissão suprema - controle total
+        Administrador,      // Gerencia sistema e usuários
+        Gerente,           // Gerencia operações do hotel
+        Recepcionista,     // Operações diárias
+        Visualizador       // Apenas visualização
     }
 
     public class LoginModel

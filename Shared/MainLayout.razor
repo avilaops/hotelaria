@@ -14,32 +14,32 @@
         <nav class="flex-column">
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                    <span class="icon">🏠</span> Página Principal
+                    <span class="icon">🏠</span> 
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="reservas">
-                    <span class="icon">📋</span> Reservas
+                    <span class="icon">📋</span> 
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="hospedes">
-                    <span class="icon">👥</span> Hóspedes
+                    <span class="icon">👥</span> 
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="disponibilidade">
-                    <span class="icon">📅</span> Disponibilidade
+                    <span class="icon">📅</span> 
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="financeiro">
-                    <span class="icon">💰</span> Financeiro
+                    <span class="icon">💰</span> 
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="relatorios">
-                    <span class="icon">📊</span> Relatórios
+                    <span class="icon">📊</span> 
                 </NavLink>
             </div>
         </nav>
@@ -55,26 +55,19 @@
 
     <main>
         <div class="top-row px-4">
-            @if (AuthService.EstaAutenticado())
-            {
+            @{
                 var usuario = AuthService.ObterUsuarioAtual();
-                <div class="user-menu">
-                    <span class="user-info">
-                        <span class="icon">👤</span> 
-                        <span class="user-name">@usuario?.Nome</span>
-                        <span class="user-perfil">(@AuthService.ObterNomePerfil(usuario?.Perfil ?? PerfilUsuario.Visualizador))</span>
-                    </span>
-                    <button class="btn btn-secondary btn-sm" @onclick="RealizarLogout">
-                        🚪 Sair
-                    </button>
-                </div>
             }
-            else
-            {
+            <div class="user-menu">
                 <span class="user-info">
-                    <span class="icon">👤</span> Visitante
+                    <span class="icon">👤</span> 
+                    <span class="user-name">@usuario?.Nome</span>
+                    <span class="user-perfil">(@AuthService.ObterNomePerfil(usuario?.Perfil ?? PerfilUsuario.Visualizador))</span>
                 </span>
-            }
+                <button class="btn btn-secondary btn-sm" @onclick="RealizarLogout">
+                    🚪 Sair
+                </button>
+            </div>
         </div>
 
         <article class="content px-4">
@@ -87,12 +80,6 @@
     protected override void OnInitialized()
     {
         AuthService.OnAuthStateChanged += StateHasChanged;
-        
-        // Verificar se está autenticado
-        if (!AuthService.EstaAutenticado() && !NavigationManager.Uri.Contains("/login"))
-        {
-            NavigationManager.NavigateTo("/login", forceLoad: true);
-        }
     }
 
     private void RealizarLogout()

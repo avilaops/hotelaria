@@ -14,7 +14,13 @@ builder.Services.AddSingleton<QuartoService>();
 builder.Services.AddSingleton<HospedeService>();
 builder.Services.AddSingleton<ImportacaoService>();
 builder.Services.AddSingleton<RelatorioService>();
-builder.Services.AddSingleton<AuthService>();
+
+// Repositório de usuários compartilhado (Singleton)
+builder.Services.AddSingleton<UserRepository>();
+
+// AuthService isolado por sessão (Scoped) - CORREÇÃO DE SEGURANÇA CRÍTICA
+builder.Services.AddScoped<AuthService>();
+
 builder.Services.AddSingleton<ConfigurationService>();
 builder.Services.AddSingleton<AuditService>();
 
@@ -64,11 +70,6 @@ else
 }
 
 var app = builder.Build();
-
-// Injetar AuthService no ConfigurationService
-var configService = app.Services.GetRequiredService<ConfigurationService>();
-var authService = app.Services.GetRequiredService<AuthService>();
-configService.SetAuthService(authService);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

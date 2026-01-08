@@ -3,6 +3,8 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Blazor](https://img.shields.io/badge/Blazor-Server-512BD4?logo=blazor)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Build Status](https://github.com/avilaops/hotelaria/actions/workflows/dotnet.yml/badge.svg)](https://github.com/avilaops/hotelaria/actions)
+[![Staging](https://github.com/avilaops/hotelaria/actions/workflows/staging.yml/badge.svg)](https://github.com/avilaops/hotelaria/actions)
 
 Sistema completo de gestão hoteleira desenvolvido com ASP.NET Core Blazor Server, similar ao painel de controle do Booking.com. Gerencie reservas, quartos, hóspedes e finanças de forma moderna e eficiente.
 
@@ -58,6 +60,7 @@ Sistema completo de gestão hoteleira desenvolvido com ASP.NET Core Blazor Serve
 - **Linguagem**: C# 12
 - **Estilo**: CSS3 customizado (similar ao Booking.com)
 - **Armazenamento**: In-Memory (pode ser facilmente adaptado para Entity Framework)
+- **CI/CD**: GitHub Actions com deploy automático para Azure
 
 ## 📋 Pré-requisitos
 
@@ -190,6 +193,44 @@ A aplicação vem pré-configurada com:
 
 ## 🚢 Deploy
 
+### 🔄 CI/CD Automático (Recomendado)
+
+O projeto possui pipeline completo de CI/CD com GitHub Actions:
+
+**Pipeline Completo:**
+```
+Push → Build → Test → Code Analysis → Publish → Deploy → Health Check
+```
+
+**Features:**
+- ✅ Build e testes automáticos
+- ✅ Análise de código (CodeQL)
+- ✅ Verificação de vulnerabilidades
+- ✅ Deploy automático para Azure
+- ✅ Health checks pós-deploy
+- ✅ Ambientes Production e Staging
+- ✅ Atualizações automáticas de dependências (Dependabot)
+
+**Setup:**
+1. Configure os secrets do GitHub (publish profiles)
+2. Configure os ambientes Production e Staging
+3. Faça push para `main` (production) ou `develop` (staging)
+4. O deploy acontece automaticamente! 🚀
+
+📖 **[Guia Completo de CI/CD](docs/GITHUB-ACTIONS-SETUP.md)** - Configuração detalhada do GitHub Actions
+
+**Validação Local:**
+Antes de fazer push, valide localmente:
+
+```bash
+# Windows
+.\scripts\validate-ci.ps1
+
+# Linux/macOS
+chmod +x scripts/validate-ci.sh
+./scripts/validate-ci.sh
+```
+
 ### Docker
 
 Criar `Dockerfile`:
@@ -249,6 +290,28 @@ docker run -d -p 8080:80 hotelaria
 - **AWS Elastic Beanstalk**: Suporte para .NET 8
 - **Google Cloud Run**: Container pronto para deploy
 
+## 🧪 Testes
+
+Execute os testes localmente:
+
+```bash
+# Todos os testes
+dotnet test
+
+# Com cobertura
+dotnet test --collect:"XPlat Code Coverage"
+
+# Verboso
+dotnet test --verbosity detailed
+```
+
+## 🔒 Segurança
+
+- ✅ Análise automática de código (CodeQL)
+- ✅ Scan de vulnerabilidades
+- ✅ Atualizações automáticas de dependências
+- ✅ HTTPS por padrão
+
 ## 🤝 Contribuindo
 
 Contribuições são bem-vindas! Para contribuir:
@@ -259,7 +322,21 @@ Contribuições são bem-vindas! Para contribuir:
 4. Push para a branch (`git push origin feature/MinhaFeature`)
 5. Abra um Pull Request
 
+**Workflow de Contribuição:**
+1. Fork → Branch → Código → Commit
+2. Execute `validate-ci.ps1` localmente
+3. Push → Pull Request
+4. CI automático valida seu código
+5. Review → Merge → Deploy automático! 🎉
+
 > 📖 Leia nosso [Guia de Contribuição](CONTRIBUTING.md) para mais detalhes sobre o processo e padrões de código.
+
+## 📊 Status do Projeto
+
+| Branch | Status | Deploy |
+|--------|--------|--------|
+| `main` | ![Build](https://github.com/avilaops/hotelaria/actions/workflows/dotnet.yml/badge.svg?branch=main) | Production |
+| `develop` | ![Build](https://github.com/avilaops/hotelaria/actions/workflows/staging.yml/badge.svg?branch=develop) | Staging |
 
 ## 📝 Roadmap
 

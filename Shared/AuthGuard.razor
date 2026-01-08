@@ -1,0 +1,48 @@
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+@if (IsAuthorized)
+{
+    @ChildContent
+}
+else
+{
+    <div style="display: none;">
+        @{ 
+            if (!NavigationManager.Uri.Contains("/login"))
+            {
+                NavigationManager.NavigateTo("/login", forceLoad: true);
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public PerfilUsuario? PerfilMinimo { get; set; }
+
+    private bool IsAuthorized { get; set; }
+
+    protected override void OnInitialized()
+    {
+        CheckAuthorization();
+    }
+
+    private void CheckAuthorization()
+    {
+        IsAuthorized = AuthService.EstaAutenticado();
+
+        if (IsAuthorized && PerfilMinimo.HasValue)
+        {
+            IsAuthorized = AuthService.TemPermissao(PerfilMinimo.Value);
+        }
+
+        if (!IsAuthorized && !NavigationManager.Uri.Contains("/login"))
+        {
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+    }
+}

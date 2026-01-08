@@ -6,51 +6,21 @@ namespace Hotelaria.Services
 {
     public class AuthService
     {
-        private readonly List<Usuario> _usuarios = new();
-        private int _nextId = 1;
+        private readonly UserRepository _userRepository;
         private SessaoUsuario _sessaoAtual = new();
         
-        // Rate limiting
+        // Rate limiting (por sessão)
         private readonly Dictionary<string, (int attempts, DateTime lockUntil)> _loginAttempts = new();
         private const int MaxLoginAttempts = 5;
         private const int LockoutMinutes = 15;
 
         public event Action? OnAuthStateChanged;
 
-        public AuthService()
+        public AuthService(UserRepository userRepository)
         {
-            // Criar usuário admin padrão
-            AdicionarUsuario(new Usuario
-            {
-                Nome = "Administrador",
-                Email = "admin@hotelaria.com",
-                Username = "admin",
-                SenhaHash = HashSenha("admin123"),
-                Perfil = PerfilUsuario.Administrador,
-                Ativo = true
-            });
-
-            // Criar usuário gerente de exemplo
-            AdicionarUsuario(new Usuario
-            {
-                Nome = "Maria Silva",
-                Email = "maria@hotelaria.com",
-                Username = "maria",
-                SenhaHash = HashSenha("maria123"),
-                Perfil = PerfilUsuario.Gerente,
-                Ativo = true
-            });
-
-            // Criar recepcionista de exemplo
-            AdicionarUsuario(new Usuario
-            {
-                Nome = "João Santos",
-                Email = "joao@hotelaria.com",
-                Username = "joao",
-                SenhaHash = HashSenha("joao123"),
-                Perfil = PerfilUsuario.Recepcionista,
-                Ativo = true
-            });
+            _userRepository = userRepository;
+            // IMPORTANTE: Iniciar sem sessão ativa
+            _sessaoAtual = new SessaoUsuario();
         }
 
         // Autenticação com Rate Limiting
@@ -62,11 +32,9 @@ namespace Hotelaria.Services
                 return false;
             }
 
-            var usuario = _usuarios.FirstOrDefault(u => 
-                u.Username.Equals(username, StringComparison.OrdinalIgnoreCase) && 
-                u.Ativo);
+            var usuario = _userRepository.ObterPorUsername(username);
 
-            if (usuario == null)
+            if (usuario == null || !usuario.Ativo)
             {
                 RegisterFailedAttempt(username);
                 return false;
@@ -84,7 +52,10 @@ namespace Hotelaria.Services
                 _loginAttempts.Remove(username);
             }
 
+            // Atualizar último acesso
             usuario.UltimoAcesso = DateTime.Now;
+            _userRepository.Atualizar(usuario);
+
             _sessaoAtual = new SessaoUsuario
             {
                 Usuario = usuario,
@@ -171,7 +142,11 @@ namespace Hotelaria.Services
 
         public Usuario? ObterUsuarioAtual() => _sessaoAtual.Usuario;
 
-        public bool EstaAutenticado() => _sessaoAtual.EstaAutenticado;
+        public bool EstaAutenticado() 
+        {
+            // IMPORTANTE: Validar que a sessão existe E tem usuário válido
+            return _sessaoAtual != null && _sessaoAtual.Usuario != null && _sessaoAtual.Usuario.Ativo;
+        }
 
         public bool TemPermissao(PerfilUsuario perfilMinimo)
         {
@@ -182,73 +157,39 @@ namespace Hotelaria.Services
             if (usuario == null)
                 return false;
 
-            // Hierarquia: Administrador > Gerente > Recepcionista > Visualizador
+            // Desenvolvedor tem permissão total sempre
+            if (usuario.Perfil == PerfilUsuario.Desenvolvedor)
+                return true;
+
+            // Hierarquia: Desenvolvedor > Administrador > Gerente > Recepcionista > Visualizador
             return usuario.Perfil <= perfilMinimo;
         }
 
-        // Gestão de Usuários
-        public List<Usuario> ObterTodos() => _usuarios;
+        // Gestão de Usuários (delegação para UserRepository)
+        public List<Usuario> ObterTodos() => _userRepository.ObterTodos();
 
-        public Usuario? ObterPorId(int id) => _usuarios.FirstOrDefault(u => u.Id == id);
+        public Usuario? ObterPorId(int id) => _userRepository.ObterPorId(id);
 
-        public Usuario? ObterPorUsername(string username) => 
-            _usuarios.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+        public Usuario? ObterPorUsername(string username) => _userRepository.ObterPorUsername(username);
 
         public bool AdicionarUsuario(Usuario usuario)
         {
-            // Verificar se username já existe
-            if (ObterPorUsername(usuario.Username) != null)
-                return false;
-
-            usuario.Id = _nextId++;
-            usuario.DataCriacao = DateTime.Now;
-            _usuarios.Add(usuario);
-            return true;
+            return _userRepository.Adicionar(usuario);
         }
 
         public bool AtualizarUsuario(Usuario usuario)
         {
-            var index = _usuarios.FindIndex(u => u.Id == usuario.Id);
-            if (index == -1)
-                return false;
-
-            // Verificar se o novo username já está em uso por outro usuário
-            var usuarioComMesmoUsername = ObterPorUsername(usuario.Username);
-            if (usuarioComMesmoUsername != null && usuarioComMesmoUsername.Id != usuario.Id)
-                return false;
-
-            _usuarios[index] = usuario;
-            return true;
+            return _userRepository.Atualizar(usuario);
         }
 
         public bool RemoverUsuario(int id)
         {
-            // Não permitir remover o próprio usuário logado
-            if (_sessaoAtual.Usuario?.Id == id)
-                return false;
-
-            // Não permitir remover o último admin
-            var usuario = ObterPorId(id);
-            if (usuario?.Perfil == PerfilUsuario.Administrador)
-            {
-                var admins = _usuarios.Count(u => u.Perfil == PerfilUsuario.Administrador && u.Ativo);
-                if (admins <= 1)
-                    return false;
-            }
-
-            var user = _usuarios.FirstOrDefault(u => u.Id == id);
-            if (user != null)
-            {
-                _usuarios.Remove(user);
-                return true;
-            }
-
-            return false;
+            return _userRepository.Remover(id, _sessaoAtual.Usuario?.Id);
         }
 
         public bool AlterarSenha(int usuarioId, string senhaAtual, string novaSenha)
         {
-            var usuario = ObterPorId(usuarioId);
+            var usuario = _userRepository.ObterPorId(usuarioId);
             if (usuario == null)
                 return false;
 
@@ -256,15 +197,16 @@ namespace Hotelaria.Services
                 return false;
 
             usuario.SenhaHash = HashSenha(novaSenha);
-            return true;
+            return _userRepository.Atualizar(usuario);
         }
 
         public void RedefinirSenha(int usuarioId, string novaSenha)
         {
-            var usuario = ObterPorId(usuarioId);
+            var usuario = _userRepository.ObterPorId(usuarioId);
             if (usuario != null)
             {
                 usuario.SenhaHash = HashSenha(novaSenha);
+                _userRepository.Atualizar(usuario);
             }
         }
 
@@ -333,6 +275,7 @@ namespace Hotelaria.Services
         {
             return perfil switch
             {
+                PerfilUsuario.Desenvolvedor => "Desenvolvedor",
                 PerfilUsuario.Administrador => "Administrador",
                 PerfilUsuario.Gerente => "Gerente",
                 PerfilUsuario.Recepcionista => "Recepcionista",
@@ -343,23 +286,12 @@ namespace Hotelaria.Services
 
         public List<Usuario> FiltrarPorPerfil(PerfilUsuario? perfil)
         {
-            if (perfil == null)
-                return _usuarios;
-
-            return _usuarios.Where(u => u.Perfil == perfil).ToList();
+            return _userRepository.FiltrarPorPerfil(perfil);
         }
 
         public List<Usuario> BuscarUsuarios(string termo)
         {
-            if (string.IsNullOrWhiteSpace(termo))
-                return _usuarios;
-
-            termo = termo.ToLower();
-            return _usuarios.Where(u =>
-                u.Nome.ToLower().Contains(termo) ||
-                u.Username.ToLower().Contains(termo) ||
-                u.Email.ToLower().Contains(termo)
-            ).ToList();
+            return _userRepository.Buscar(termo);
         }
     }
 }

@@ -1,0 +1,73 @@
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+
+@if (ShouldRender)
+{
+    @if (IsLoginPage)
+    {
+        <!-- Renderizar página de login sem layout -->
+        <RouteView RouteData="@RouteData" />
+    }
+    else if (IsAuthorized)
+    {
+        <!-- Renderizar página com layout -->
+        <RouteView RouteData="@RouteData" DefaultLayout="@DefaultLayout" />
+    }
+    else
+    {
+        <!-- Não autorizado - renderizar conteúdo personalizado ou redirecionar -->
+        @if (NotAuthorized != null)
+        {
+            @NotAuthorized
+        }
+        else
+        {
+            <RedirectToLogin />
+        }
+    }
+}
+
+@code {
+    [Parameter]
+    public RouteData RouteData { get; set; } = default!;
+
+    [Parameter]
+    public Type? DefaultLayout { get; set; }
+
+    [Parameter]
+    public RenderFragment? NotAuthorized { get; set; }
+
+    private bool IsAuthorized { get; set; }
+    private bool IsLoginPage { get; set; }
+    private bool ShouldRender { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        // Verificar se é página de login
+        IsLoginPage = RouteData.PageType.Name == "Login";
+        
+        // Verificar autenticação
+        IsAuthorized = AuthService.EstaAutenticado();
+        
+        // Decidir se deve renderizar
+        if (IsLoginPage)
+        {
+            // Sempre renderiza página de login
+            ShouldRender = true;
+            
+            // Se já está autenticado, redirecionar para home
+            if (IsAuthorized)
+            {
+                NavigationManager.NavigateTo("/", forceLoad: true);
+                ShouldRender = false;
+            }
+        }
+        else
+        {
+            // Para outras páginas, só renderiza se autenticado
+            ShouldRender = IsAuthorized;
+            
+            // Se não está autenticado, o NotAuthorized ou RedirectToLogin será executado
+        }
+    }
+}
