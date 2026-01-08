@@ -16,6 +16,7 @@
     private bool importacaoConcluida = false;
     private string conteudoArquivo = string.Empty;
     private bool importando = false;
+    private FileValidationResult? fileValidation;
 
     protected override void OnInitialized()
     {
@@ -41,18 +42,43 @@
             processando = true;
             resultado = null;
             importacaoConcluida = false;
+            fileValidation = null;
 
             var arquivo = e.File;
-            nomeArquivo = arquivo.Name;
-            tamanhoArquivo = arquivo.Size / 1024;
+
+            // VALIDAÇÃO COMPLETA DO ARQUIVO
+            fileValidation = await FileValidator.ValidateFileAsync(arquivo);
+            
+            if (!fileValidation.IsValid)
+            {
+                resultado = new ImportacaoResultado
+                {
+                    LinhasComErro = 1,
+                    Erros = fileValidation.Errors
+                };
+                processando = false;
+                return;
+            }
+
+            nomeArquivo = fileValidation.FileName;
+            tamanhoArquivo = fileValidation.FileSize / 1024;
 
             // Ler conteúdo do arquivo
-            using var stream = arquivo.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB max
+            using var stream = arquivo.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
             using var reader = new StreamReader(stream);
             conteudoArquivo = await reader.ReadToEndAsync();
 
             // Processar dados
             resultado = ImportacaoService.ProcessarCSV(conteudoArquivo);
+            
+            // Adicionar avisos do FileValidator
+            if (fileValidation.Warnings.Any())
+            {
+                foreach (var warning in fileValidation.Warnings)
+                {
+                    resultado.Erros.Insert(0, $"⚠️ {warning}");
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -141,7 +167,21 @@
                     <span class="icon">📄</span>
                     <div class="file-details">
                         <strong>@nomeArquivo</strong>
-                        <span class="file-size">@tamanhoArquivo KB · @(resultado?.TotalLinhas ?? 0) linhas</span>
+                        <span class="file-size">
+                            @FileValidator.FormatFileSize(tamanhoArquivo * 1024)
+                            @if (fileValidation != null)
+                            {
+                                <span> · @(fileValidation.LineCount ?? 0) linhas</span>
+                                @if (fileValidation.DetectedEncoding != null)
+                                {
+                                    <span> · @fileValidation.DetectedEncoding</span>
+                                }
+                                @if (fileValidation.DetectedDelimiter != null)
+                                {
+                                    <span> · @fileValidation.DetectedDelimiter</span>
+                                }
+                            }
+                        </span>
                     </div>
                     <button class="btn-remove" @onclick="LimparDados" title="Remover arquivo">✖</button>
                 </div>
@@ -152,6 +192,12 @@
             <h4>📋 Formato Esperado:</h4>
             <div class="format-details">
                 <div class="format-item">
+                    <strong>Tipos aceitos:</strong> CSV, TSV, TXT
+                </div>
+                <div class="format-item">
+                    <strong>Tamanho máximo:</strong> 10 MB
+                </div>
+                <div class="format-item">
                     <strong>Separador:</strong> Tabulação (TSV), vírgula (CSV) ou ponto-e-vírgula (;)
                 </div>
                 <div class="format-item">
@@ -159,6 +205,9 @@
                 </div>
                 <div class="format-item">
                     <strong>Colunas essenciais:</strong> Nome, Check-in, Check-out, Nº Reserva, Total
+                </div>
+                <div class="format-item">
+                    <strong>Encoding:</strong> UTF-8, UTF-16 ou ASCII
                 </div>
             </div>
             <details class="format-example">
@@ -174,7 +223,7 @@ João Silva	01/01/1990	123456789	Portugal	BI	Q 3 - Cama 01	15/01/2024	20/01/2024
         <div class="loading">
             <div class="spinner"></div>
             <p>Processando arquivo...</p>
-            <p class="loading-hint">Validando dados e verificando erros</p>
+            <p class="loading-hint">Validando formato, encoding e estrutura de dados</p>
         </div>
     }
 

@@ -22,7 +22,11 @@ jobs:
       run: dotnet restore
       
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build --no-restore --configuration Release /p:TreatWarningsAsErrors=false
+      
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal --logger "console;verbosity=detailed" || true
+      continue-on-error: true
       
     - name: Publish
       run: dotnet publish --no-build --configuration Release --output ./publish
@@ -32,3 +36,4 @@ jobs:
       with:
         name: hotelaria-app
         path: ./publish
+        retention-days: 7

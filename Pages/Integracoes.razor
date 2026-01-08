@@ -345,7 +345,10 @@ else
 
     private void ValidateAccess()
     {
-        if (ConfigService.ValidateAccess(username, password))
+        // Usar AuthService ao invés de ValidateAccess com parâmetros
+        var loginSuccess = AuthService.Login(username, password);
+        
+        if (loginSuccess && AuthService.TemPermissao(PerfilUsuario.Administrador))
         {
             isAuthenticated = true;
             errorMessage = string.Empty;
@@ -353,7 +356,7 @@ else
         }
         else
         {
-            errorMessage = "Credenciais inválidas";
+            errorMessage = "Credenciais inválidas ou sem permissão de administrador";
         }
     }
 

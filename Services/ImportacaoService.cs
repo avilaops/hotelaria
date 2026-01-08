@@ -249,16 +249,30 @@ namespace Hotelaria.Services
             {
                 dados.Erros.Add("💡 Email não informado - recomendado para contato");
             }
+            else if (!InputSanitizer.IsValidEmail(dados.EmailHospede))
+            {
+                dados.Erros.Add($"⚠️ Email inválido: {dados.EmailHospede}");
+            }
 
             if (string.IsNullOrWhiteSpace(dados.TelefoneHospede))
             {
                 dados.Erros.Add("💡 Telefone não informado - recomendado para contato");
             }
 
+            // VALIDAÇÃO DE DATAS COM DateValidator
             if (!dados.CheckIn.HasValue)
             {
                 dados.IsValid = false;
                 dados.Erros.Add("Data de Check-in inválida ou não informada");
+            }
+            else
+            {
+                var checkInValidation = DateValidator.ValidateCheckInDate(dados.CheckIn.Value);
+                if (!checkInValidation.IsValid)
+                {
+                    dados.IsValid = false;
+                    dados.Erros.Add($"Check-in: {checkInValidation.ErrorMessage}");
+                }
             }
 
             if (!dados.CheckOut.HasValue)
@@ -267,23 +281,30 @@ namespace Hotelaria.Services
                 dados.Erros.Add("Data de Check-out inválida ou não informada");
             }
 
+            // Validar relação entre check-in e check-out
             if (dados.CheckIn.HasValue && dados.CheckOut.HasValue)
             {
-                if (dados.CheckIn >= dados.CheckOut)
+                var checkOutValidation = DateValidator.ValidateCheckOutDate(dados.CheckIn.Value, dados.CheckOut.Value);
+                if (!checkOutValidation.IsValid)
                 {
                     dados.IsValid = false;
-                    dados.Erros.Add($"Check-out ({dados.CheckOut:dd/MM/yyyy}) deve ser posterior ao Check-in ({dados.CheckIn:dd/MM/yyyy})");
+                    dados.Erros.Add($"Check-out: {checkOutValidation.ErrorMessage}");
                 }
+            }
 
-                // Validar datas não muito antigas ou futuras
-                if (dados.CheckIn < DateTime.Now.AddYears(-2))
+            // Validar data de pagamento se informada
+            if (dados.DataPagamento.HasValue)
+            {
+                var pagamentoValidation = DateValidator.ValidateDate(dados.DataPagamento, "Data de pagamento");
+                if (!pagamentoValidation.IsValid)
                 {
-                    dados.Erros.Add($"⚠️ Check-in muito antigo: {dados.CheckIn:dd/MM/yyyy}");
+                    dados.Erros.Add($"⚠️ {pagamentoValidation.ErrorMessage}");
                 }
-
-                if (dados.CheckOut > DateTime.Now.AddYears(2))
+                
+                // Data de pagamento não pode ser posterior ao check-out
+                if (dados.CheckOut.HasValue && dados.DataPagamento > dados.CheckOut.Value.AddDays(30))
                 {
-                    dados.Erros.Add($"⚠️ Check-out muito distante: {dados.CheckOut:dd/MM/yyyy}");
+                    dados.Erros.Add($"⚠️ Data de pagamento ({dados.DataPagamento:dd/MM/yyyy}) muito distante do check-out");
                 }
             }
 
@@ -301,6 +322,20 @@ namespace Hotelaria.Services
             if (dados.Diaria <= 0)
             {
                 dados.Erros.Add("⚠️ Valor da diária é zero ou inválido");
+            }
+            
+            // Validação de consistência financeira
+            if (dados.CheckIn.HasValue && dados.CheckOut.HasValue && dados.Total > 0)
+            {
+                var noites = (dados.CheckOut.Value - dados.CheckIn.Value).Days;
+                var valorEsperado = dados.Diaria * noites;
+                var diferenca = Math.Abs(dados.Total - valorEsperado);
+                
+                // Se diferença for maior que 20%, avisar
+                if (diferenca > (valorEsperado * 0.2m))
+                {
+                    dados.Erros.Add($"⚠️ Valor total (€{dados.Total:N2}) não corresponde a {noites} noites × €{dados.Diaria:N2} = €{valorEsperado:N2}");
+                }
             }
         }
 
@@ -441,21 +476,12 @@ namespace Hotelaria.Services
         {
             if (string.IsNullOrWhiteSpace(valor)) return null;
 
-            // Tentar vários formatos
-            string[] formatos = { 
-                "dd/MM/yyyy", 
-                "dd-MM-yyyy",
-                "yyyy-MM-dd",
-                "MM/dd/yyyy" 
-            };
-
-            foreach (var formato in formatos)
+            // Usar DateValidator.ParseDate
+            var (success, date, error) = DateValidator.ParseDate(valor.Trim());
+            
+            if (success && date.HasValue)
             {
-                if (DateTime.TryParseExact(valor.Trim(), formato, 
-                    CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime data))
-                {
-                    return data;
-                }
+                return date.Value;
             }
 
             return null;

@@ -1,6 +1,8 @@
 @page "/login"
 @inject AuthService AuthService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
 
 <PageTitle>Login - Hotelaria</PageTitle>
 
@@ -28,6 +30,20 @@
                 </div>
             }
 
+            @if (tentativasRestantes < 5 && tentativasRestantes > 0)
+            {
+                <div class="alert-warning-minimal">
+                    <span>⚠️ @tentativasRestantes tentativa@(tentativasRestantes > 1 ? "s" : "") restante@(tentativasRestantes > 1 ? "s" : "")</span>
+                </div>
+            }
+
+            @if (bloqueadoAte.HasValue)
+            {
+                <div class="alert-danger-minimal">
+                    <span>🔒 Conta bloqueada até @bloqueadoAte.Value.ToString("HH:mm:ss")</span>
+                </div>
+            }
+
             <div class="input-group">
                 <input type="text" 
                        @bind="loginModel.Username" 
@@ -35,6 +51,7 @@
                        @onkeydown="HandleKeyDown"
                        placeholder="Usuário"
                        class="input-minimal"
+                       disabled="@bloqueadoAte.HasValue"
                        autofocus />
             </div>
 
@@ -44,10 +61,13 @@
                        @bind:event="oninput"
                        @onkeydown="HandleKeyDown"
                        placeholder="Senha"
+                       disabled="@bloqueadoAte.HasValue"
                        class="input-minimal" />
             </div>
 
-            <button class="btn-primary-minimal" @onclick="RealizarLogin" disabled="@processando">
+            <button class="btn-primary-minimal" 
+                    @onclick="RealizarLogin" 
+                    disabled="@(processando || bloqueadoAte.HasValue)">
                 @if (processando)
                 {
                     <span class="spinner-minimal"></span>
@@ -64,39 +84,42 @@
             </label>
         </div>
 
-        <!-- Credenciais de Teste - Discretas -->
-        <div class="test-credentials">
-            <div class="credentials-header">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-                    <path d="M6 0C2.7 0 0 2.7 0 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm.5 9.5h-1V5h1v4.5zm0-5.5h-1V3h1v1z"/>
-                </svg>
-                <span>Credenciais de teste</span>
+        <!-- Credenciais de Teste - APENAS EM DESENVOLVIMENTO -->
+        @if (isDevelopment)
+        {
+            <div class="test-credentials">
+                <div class="credentials-header">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                        <path d="M6 0C2.7 0 0 2.7 0 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm.5 9.5h-1V5h1v4.5zm0-5.5h-1V3h1v1z"/>
+                    </svg>
+                    <span>Credenciais de teste (DEV)</span>
+                </div>
+                <div class="credentials-list">
+                    <div class="credential">
+                        <span class="role">Admin</span>
+                        <span class="separator">·</span>
+                        <code>admin / admin123</code>
+                    </div>
+                    <div class="credential">
+                        <span class="role">Gerente</span>
+                        <span class="separator">·</span>
+                        <code>maria / maria123</code>
+                    </div>
+                    <div class="credential">
+                        <span class="role">Recepcionista</span>
+                        <span class="separator">·</span>
+                        <code>joao / joao123</code>
+                    </div>
+                </div>
             </div>
-            <div class="credentials-list">
-                <div class="credential">
-                    <span class="role">Admin</span>
-                    <span class="separator">·</span>
-                    <code>admin / admin123</code>
-                </div>
-                <div class="credential">
-                    <span class="role">Gerente</span>
-                    <span class="separator">·</span>
-                    <code>maria / maria123</code>
-                </div>
-                <div class="credential">
-                    <span class="role">Recepcionista</span>
-                    <span class="separator">·</span>
-                    <code>joao / joao123</code>
-                </div>
-            </div>
-        </div>
+        }
     </div>
 
     <!-- Footer Minimalista -->
     <div class="login-footer">
         <span>© 2026 Hotelaria</span>
         <span class="separator">·</span>
-        <span>v2.5.0</span>
+        <span>v2.6.0</span>
     </div>
 </div>
 
@@ -104,6 +127,9 @@
     private LoginModel loginModel = new();
     private string mensagemErro = string.Empty;
     private bool processando = false;
+    private bool isDevelopment = false;
+    private int tentativasRestantes = 5;
+    private DateTime? bloqueadoAte = null;
 
     protected override void OnInitialized()
     {
@@ -111,6 +137,9 @@
         {
             NavigationManager.NavigateTo("/");
         }
+
+        // Verificar ambiente
+        isDevelopment = Configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT") == "Development";
     }
 
     private async Task RealizarLogin()
@@ -118,6 +147,7 @@
         mensagemErro = string.Empty;
         processando = true;
 
+        // Validações de input
         if (string.IsNullOrWhiteSpace(loginModel.Username))
         {
             mensagemErro = "Por favor, informe o usuário";
@@ -132,24 +162,52 @@
             return;
         }
 
-        await Task.Delay(500);
+        // Verificar se conta está bloqueada
+        bloqueadoAte = AuthService.GetLockoutTime(loginModel.Username);
+        if (bloqueadoAte.HasValue)
+        {
+            mensagemErro = $"Conta bloqueada até {bloqueadoAte.Value:HH:mm:ss}";
+            processando = false;
+            return;
+        }
+
+        await Task.Delay(500); // Delay artificial para prevenir timing attacks
 
         var sucesso = AuthService.Login(loginModel.Username, loginModel.Senha);
 
         if (sucesso)
         {
+            // Salvar sessão no LocalStorage se "Lembrar-me" marcado
+            if (loginModel.LembrarMe)
+            {
+                await JSRuntime.InvokeVoidAsync("SessionManager.setSession", 
+                    Guid.NewGuid().ToString(), 60); // 60 minutos
+            }
+
             NavigationManager.NavigateTo("/", forceLoad: true);
         }
         else
         {
-            mensagemErro = "Credenciais inválidas";
+            // Atualizar tentativas restantes
+            tentativasRestantes = AuthService.GetRemainingAttempts(loginModel.Username);
+            bloqueadoAte = AuthService.GetLockoutTime(loginModel.Username);
+
+            if (bloqueadoAte.HasValue)
+            {
+                mensagemErro = $"Muitas tentativas. Conta bloqueada por 15 minutos.";
+            }
+            else if (tentativasRestantes > 0)
+            {
+                mensagemErro = "Usuário ou senha incorretos";
+            }
+
             processando = false;
         }
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !processando)
+        if (e.Key == "Enter" && !processando && !bloqueadoAte.HasValue)
         {
             await RealizarLogin();
         }

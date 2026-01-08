@@ -7,6 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
+// Services
 builder.Services.AddSingleton<ReservaService>();
 builder.Services.AddSingleton<QuartoService>();
 builder.Services.AddSingleton<HospedeService>();
@@ -14,12 +16,59 @@ builder.Services.AddSingleton<ImportacaoService>();
 builder.Services.AddSingleton<RelatorioService>();
 builder.Services.AddSingleton<AuthService>();
 builder.Services.AddSingleton<ConfigurationService>();
-builder.Services.AddHttpClient<PayPalService>();
-builder.Services.AddHttpClient<AirbnbService>();
-builder.Services.AddHttpClient<SentryService>();
+builder.Services.AddSingleton<AuditService>();
+
+// HttpClient com Polly para resiliência
+builder.Services.AddHttpClient<PayPalService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "Hotelaria/2.6.0");
+});
+
+builder.Services.AddHttpClient<AirbnbService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "Hotelaria/2.6.0");
+});
+
+builder.Services.AddHttpClient<SentryService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "Hotelaria/2.6.0");
+});
+
 builder.Services.AddSingleton<MongoDBService>();
 
+// Antiforgery (CSRF Protection)
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.HttpOnly = true;
+});
+
+// Logging estruturado
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
+// Configurar níveis de log
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.SetMinimumLevel(LogLevel.Debug);
+}
+else
+{
+    builder.Logging.SetMinimumLevel(LogLevel.Information);
+}
+
 var app = builder.Build();
+
+// Injetar AuthService no ConfigurationService
+var configService = app.Services.GetRequiredService<ConfigurationService>();
+var authService = app.Services.GetRequiredService<AuthService>();
+configService.SetAuthService(authService);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -27,6 +76,23 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+// Security Headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+    
+    if (!app.Environment.IsDevelopment())
+    {
+        context.Response.Headers.Append("Content-Security-Policy", 
+            "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;");
+    }
+    
+    await next();
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
