@@ -12,7 +12,6 @@
     private DateTime dataCheckIn = DateTime.Today.AddDays(1);
     private DateTime dataCheckOut = DateTime.Today.AddDays(2);
     private int capacidade = 2;
-    private bool buscaRealizada = false;
     
     private DateTime mesSelecionado = DateTime.Today;
     private List<Reserva> reservasMes = new();
@@ -42,7 +41,6 @@
         if (dataCheckOut > dataCheckIn)
         {
             quartosDisponiveis = QuartoService.BuscarQuartosDisponiveis(dataCheckIn, dataCheckOut, capacidade);
-            buscaRealizada = true;
         }
     }
 
@@ -116,7 +114,6 @@
     private void FecharBuscaQuartos()
     {
         mostrarBuscaQuartos = false;
-        buscaRealizada = false;
     }
 
     private void ClicarCelula(Quarto quarto, DateTime data, Reserva? reserva, int vaga)

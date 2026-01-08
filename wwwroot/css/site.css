@@ -2892,5 +2892,102 @@ textarea.form-control {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-top: 8px;
+}
+
+/* Integration Card - Modo Edição */
+.integration-card.editing {
+    border-color: #003580;
+    box-shadow: 0 0 0 2px rgba(0, 53, 128, 0.1);
+}
+
+/* Edit Form */
+.edit-form {
+    background: #f5f5f7;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.edit-form .form-group {
+    margin-bottom: 16px;
+}
+
+.edit-form .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.edit-form label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #86868b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.edit-form .form-control {
+    width: 100%;
+    height: 44px;
+    padding: 0 16px;
+    border: 1.5px solid #d2d2d7;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1d1d1f;
+    background: white;
+    transition: all 0.2s;
+}
+
+.edit-form .form-control:focus {
+    outline: none;
+    border-color: #003580;
+    box-shadow: 0 0 0 4px rgba(0, 53, 128, 0.08);
+}
+
+.edit-form .form-control::placeholder {
+    color: #86868b;
+}
+
+.edit-form small {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #86868b;
+}
+
+.edit-form select.form-control {
+    cursor: pointer;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.btn-success {
+    background: #34C759;
+    color: white;
+    border: none;
+}
+
+.btn-success:hover {
+    background: #30B350;
+}
+
+/* Info Item com action buttons */
+.integration-body .action-buttons {
+    justify-content: flex-start;
+}
+
+/* Responsive para edit form */
+@media (max-width: 768px) {
+    .edit-form .action-buttons {
+        flex-direction: column;
+    }
+
+    .edit-form .action-buttons button {
+        width: 100%;
+    }
 }

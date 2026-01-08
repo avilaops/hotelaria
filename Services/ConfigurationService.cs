@@ -19,9 +19,11 @@ namespace Hotelaria.Services
             // PayPal
             _secureConfig["PAYPAL_ID"] = GetEnvironmentVariable("PAYPAL_ID");
             _secureConfig["PAYPAL_TOKEN_API"] = GetEnvironmentVariable("PAYPAL_TOKEN_API");
+            _secureConfig["PAYPAL_ENVIRONMENT"] = GetEnvironmentVariable("PAYPAL_ENVIRONMENT") ?? "Sandbox";
             
             // MongoDB
             _secureConfig["MONGO_ATLAS_URI"] = GetEnvironmentVariable("MONGO_ATLAS_URI");
+            _secureConfig["MONGO_DATABASE"] = GetEnvironmentVariable("MONGO_DATABASE") ?? "hotelaria";
             
             // Airbnb
             _secureConfig["AIRBNB_CLIENT_KEY"] = GetEnvironmentVariable("AIRBNB_CLIENT_KEY");
@@ -76,7 +78,10 @@ namespace Hotelaria.Services
                 _secureConfig[key] = value;
                 return true;
             }
-            return false;
+            
+            // Permitir adicionar novas configurações
+            _secureConfig[key] = value;
+            return true;
         }
 
         public Dictionary<string, string> GetAllMaskedConfigs()
@@ -87,6 +92,15 @@ namespace Hotelaria.Services
                 masked[key] = GetMaskedValue(key);
             }
             return masked;
+        }
+
+        public string GetEnvironment(string service)
+        {
+            return service.ToLower() switch
+            {
+                "paypal" => _secureConfig.ContainsKey("PAYPAL_ENVIRONMENT") ? _secureConfig["PAYPAL_ENVIRONMENT"] : "Sandbox",
+                _ => "Production"
+            };
         }
     }
 }

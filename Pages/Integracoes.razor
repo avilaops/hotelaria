@@ -49,7 +49,7 @@ else
         </div>
 
         <!-- PayPal Integration -->
-        <div class="integration-card">
+        <div class="integration-card @(editandoPayPal ? "editing" : "")">
             <div class="integration-header">
                 <div class="integration-logo paypal">
                     <svg width="100" height="32" viewBox="0 0 100 32">
@@ -62,24 +62,60 @@ else
                 </div>
             </div>
             <div class="integration-body">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="label">Client ID:</span>
-                        <code>@paypalStatus["ClientId"]</code>
+                @if (!editandoPayPal)
+                {
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">Client ID:</span>
+                            <code>@paypalStatus["ClientId"]</code>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Ambiente:</span>
+                            <span>@paypalStatus["Environment"]</span>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="label">Ambiente:</span>
-                        <span>@paypalStatus["Environment"]</span>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-secondary" @onclick="() => EditarPayPal()">
+                            ✏️ Editar Credenciais
+                        </button>
+                        <button class="btn btn-sm btn-primary" @onclick="TestPayPal" disabled="@testing">
+                            @(testing ? "Testando..." : "Testar Conexão")
+                        </button>
                     </div>
-                </div>
-                <button class="btn btn-sm btn-primary" @onclick="TestPayPal" disabled="@testing">
-                    @(testing ? "Testando..." : "Testar Conexão")
-                </button>
+                }
+                else
+                {
+                    <div class="edit-form">
+                        <div class="form-group">
+                            <label>Client ID:</label>
+                            <input type="text" @bind="paypalEditClientId" class="form-control" placeholder="Ac4buNlLjPT130g4vbvAr" />
+                        </div>
+                        <div class="form-group">
+                            <label>API Token:</label>
+                            <input type="password" @bind="paypalEditToken" class="form-control" placeholder="EEobBz_RPqm2lkPGCaGJ..." />
+                        </div>
+                        <div class="form-group">
+                            <label>Ambiente:</label>
+                            <select @bind="paypalEditEnvironment" class="form-control">
+                                <option value="Sandbox">Sandbox (Teste)</option>
+                                <option value="Production">Production (Produção)</option>
+                            </select>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-secondary" @onclick="CancelarEdicaoPayPal">
+                                Cancelar
+                            </button>
+                            <button class="btn btn-sm btn-success" @onclick="SalvarPayPal">
+                                💾 Salvar
+                            </button>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
         <!-- MongoDB Integration -->
-        <div class="integration-card">
+        <div class="integration-card @(editandoMongo ? "editing" : "")">
             <div class="integration-header">
                 <div class="integration-logo mongodb">
                     <svg width="100" height="32" viewBox="0 0 100 32">
@@ -92,24 +128,54 @@ else
                 </div>
             </div>
             <div class="integration-body">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="label">Database:</span>
-                        <span>@mongoStatus["Database"]</span>
+                @if (!editandoMongo)
+                {
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">Database:</span>
+                            <span>@mongoStatus["Database"]</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Provider:</span>
+                            <span>@mongoStatus["Provider"]</span>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="label">Provider:</span>
-                        <span>@mongoStatus["Provider"]</span>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-secondary" @onclick="() => EditarMongo()">
+                            ✏️ Editar Credenciais
+                        </button>
+                        <button class="btn btn-sm btn-primary" @onclick="TestMongoDB" disabled="@testing">
+                            @(testing ? "Testando..." : "Testar Conexão")
+                        </button>
                     </div>
-                </div>
-                <button class="btn btn-sm btn-primary" @onclick="TestMongoDB" disabled="@testing">
-                    @(testing ? "Testando..." : "Testar Conexão")
-                </button>
+                }
+                else
+                {
+                    <div class="edit-form">
+                        <div class="form-group">
+                            <label>Connection String:</label>
+                            <input type="password" @bind="mongoEditConnectionString" class="form-control" placeholder="mongodb+srv://..." />
+                            <small>MongoDB Atlas URI completa</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Database Name:</label>
+                            <input type="text" @bind="mongoEditDatabase" class="form-control" placeholder="hotelaria" />
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-secondary" @onclick="CancelarEdicaoMongo">
+                                Cancelar
+                            </button>
+                            <button class="btn btn-sm btn-success" @onclick="SalvarMongo">
+                                💾 Salvar
+                            </button>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
         <!-- Airbnb Integration -->
-        <div class="integration-card">
+        <div class="integration-card @(editandoAirbnb ? "editing" : "")">
             <div class="integration-header">
                 <div class="integration-logo airbnb">
                     <svg width="100" height="32" viewBox="0 0 100 32">
@@ -122,24 +188,53 @@ else
                 </div>
             </div>
             <div class="integration-body">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="label">Client Key:</span>
-                        <code>@airbnbStatus["ClientKey"]</code>
+                @if (!editandoAirbnb)
+                {
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">Client Key:</span>
+                            <code>@airbnbStatus["ClientKey"]</code>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Features:</span>
+                            <span>Sync, Disponibilidade</span>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="label">Features:</span>
-                        <span>Sync, Disponibilidade</span>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-secondary" @onclick="() => EditarAirbnb()">
+                            ✏️ Editar Credenciais
+                        </button>
+                        <button class="btn btn-sm btn-primary" @onclick="TestAirbnb" disabled="@testing">
+                            @(testing ? "Testando..." : "Testar Conexão")
+                        </button>
                     </div>
-                </div>
-                <button class="btn btn-sm btn-primary" @onclick="TestAirbnb" disabled="@testing">
-                    @(testing ? "Testando..." : "Testar Conexão")
-                </button>
+                }
+                else
+                {
+                    <div class="edit-form">
+                        <div class="form-group">
+                            <label>Client Key:</label>
+                            <input type="text" @bind="airbnbEditClientKey" class="form-control" placeholder="af5e33493f7b6e3e..." />
+                        </div>
+                        <div class="form-group">
+                            <label>Secret Key:</label>
+                            <input type="password" @bind="airbnbEditSecretKey" class="form-control" placeholder="cbf0e70fc6ee6371..." />
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-secondary" @onclick="CancelarEdicaoAirbnb">
+                                Cancelar
+                            </button>
+                            <button class="btn btn-sm btn-success" @onclick="SalvarAirbnb">
+                                💾 Salvar
+                            </button>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
         <!-- Sentry Integration -->
-        <div class="integration-card">
+        <div class="integration-card @(editandoSentry ? "editing" : "")">
             <div class="integration-header">
                 <div class="integration-logo sentry">
                     <svg width="100" height="32" viewBox="0 0 100 32">
@@ -152,19 +247,45 @@ else
                 </div>
             </div>
             <div class="integration-body">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="label">Token:</span>
-                        <code>@sentryStatus["Token"]</code>
+                @if (!editandoSentry)
+                {
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">Token:</span>
+                            <code>@sentryStatus["Token"]</code>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Errors:</span>
+                            <span>@sentryStatus["ErrorCount"]</span>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <span class="label">Errors:</span>
-                        <span>@sentryStatus["ErrorCount"]</span>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-secondary" @onclick="() => EditarSentry()">
+                            ✏️ Editar Credenciais
+                        </button>
+                        <button class="btn btn-sm btn-primary" @onclick="TestSentry" disabled="@testing">
+                            @(testing ? "Testando..." : "Testar Conexão")
+                        </button>
                     </div>
-                </div>
-                <button class="btn btn-sm btn-primary" @onclick="TestSentry" disabled="@testing">
-                    @(testing ? "Testando..." : "Testar Conexão")
-                </button>
+                }
+                else
+                {
+                    <div class="edit-form">
+                        <div class="form-group">
+                            <label>API Token:</label>
+                            <input type="password" @bind="sentryEditToken" class="form-control" placeholder="sntrys_eyJpYXQi..." />
+                            <small>Token de autenticação do Sentry</small>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-secondary" @onclick="CancelarEdicaoSentry">
+                                Cancelar
+                            </button>
+                            <button class="btn btn-sm btn-success" @onclick="SalvarSentry">
+                                💾 Salvar
+                            </button>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -177,21 +298,42 @@ else
     private string errorMessage = string.Empty;
     private bool testing = false;
 
+    // Status das integrações
     private Dictionary<string, object> paypalStatus = new();
     private Dictionary<string, object> mongoStatus = new();
     private Dictionary<string, object> airbnbStatus = new();
     private Dictionary<string, object> sentryStatus = new();
 
+    // Estados de edição
+    private bool editandoPayPal = false;
+    private bool editandoMongo = false;
+    private bool editandoAirbnb = false;
+    private bool editandoSentry = false;
+
+    // PayPal - Campos de edição
+    private string paypalEditClientId = string.Empty;
+    private string paypalEditToken = string.Empty;
+    private string paypalEditEnvironment = "Sandbox";
+
+    // MongoDB - Campos de edição
+    private string mongoEditConnectionString = string.Empty;
+    private string mongoEditDatabase = "hotelaria";
+
+    // Airbnb - Campos de edição
+    private string airbnbEditClientKey = string.Empty;
+    private string airbnbEditSecretKey = string.Empty;
+
+    // Sentry - Campos de edição
+    private string sentryEditToken = string.Empty;
+
     protected override void OnInitialized()
     {
-        // Verificar se está autenticado no sistema
         if (!AuthService.EstaAutenticado())
         {
             NavigationManager.NavigateTo("/login");
             return;
         }
 
-        // Verificar se é administrador
         if (!AuthService.TemPermissao(PerfilUsuario.Administrador))
         {
             NavigationManager.NavigateTo("/");
@@ -238,12 +380,67 @@ else
         sentryStatus = SentryService.GetStatus();
     }
 
+    // ========== PayPal ==========
+    private void EditarPayPal()
+    {
+        paypalEditClientId = ConfigService.GetSecureValue("PAYPAL_ID") ?? "";
+        paypalEditToken = ConfigService.GetSecureValue("PAYPAL_TOKEN_API") ?? "";
+        paypalEditEnvironment = "Sandbox";
+        editandoPayPal = true;
+    }
+
+    private void CancelarEdicaoPayPal()
+    {
+        editandoPayPal = false;
+        paypalEditClientId = string.Empty;
+        paypalEditToken = string.Empty;
+    }
+
+    private void SalvarPayPal()
+    {
+        if (!string.IsNullOrWhiteSpace(paypalEditClientId) && !string.IsNullOrWhiteSpace(paypalEditToken))
+        {
+            ConfigService.UpdateConfiguration("PAYPAL_ID", paypalEditClientId);
+            ConfigService.UpdateConfiguration("PAYPAL_TOKEN_API", paypalEditToken);
+            ConfigService.UpdateConfiguration("PAYPAL_ENVIRONMENT", paypalEditEnvironment);
+            
+            editandoPayPal = false;
+            LoadIntegrationStatus();
+        }
+    }
+
     private async Task TestPayPal()
     {
         testing = true;
         await PayPalService.TestConnection();
         LoadIntegrationStatus();
         testing = false;
+    }
+
+    // ========== MongoDB ==========
+    private void EditarMongo()
+    {
+        mongoEditConnectionString = ConfigService.GetSecureValue("MONGO_ATLAS_URI") ?? "";
+        mongoEditDatabase = "hotelaria";
+        editandoMongo = true;
+    }
+
+    private void CancelarEdicaoMongo()
+    {
+        editandoMongo = false;
+        mongoEditConnectionString = string.Empty;
+    }
+
+    private void SalvarMongo()
+    {
+        if (!string.IsNullOrWhiteSpace(mongoEditConnectionString))
+        {
+            ConfigService.UpdateConfiguration("MONGO_ATLAS_URI", mongoEditConnectionString);
+            ConfigService.UpdateConfiguration("MONGO_DATABASE", mongoEditDatabase);
+            
+            editandoMongo = false;
+            LoadIntegrationStatus();
+        }
     }
 
     private async Task TestMongoDB()
@@ -254,12 +451,63 @@ else
         testing = false;
     }
 
+    // ========== Airbnb ==========
+    private void EditarAirbnb()
+    {
+        airbnbEditClientKey = ConfigService.GetSecureValue("AIRBNB_CLIENT_KEY") ?? "";
+        airbnbEditSecretKey = ConfigService.GetSecureValue("AIRBNB_SECRET_KEY") ?? "";
+        editandoAirbnb = true;
+    }
+
+    private void CancelarEdicaoAirbnb()
+    {
+        editandoAirbnb = false;
+        airbnbEditClientKey = string.Empty;
+        airbnbEditSecretKey = string.Empty;
+    }
+
+    private void SalvarAirbnb()
+    {
+        if (!string.IsNullOrWhiteSpace(airbnbEditClientKey) && !string.IsNullOrWhiteSpace(airbnbEditSecretKey))
+        {
+            ConfigService.UpdateConfiguration("AIRBNB_CLIENT_KEY", airbnbEditClientKey);
+            ConfigService.UpdateConfiguration("AIRBNB_SECRET_KEY", airbnbEditSecretKey);
+            
+            editandoAirbnb = false;
+            LoadIntegrationStatus();
+        }
+    }
+
     private async Task TestAirbnb()
     {
         testing = true;
         await AirbnbService.TestConnection();
         LoadIntegrationStatus();
         testing = false;
+    }
+
+    // ========== Sentry ==========
+    private void EditarSentry()
+    {
+        sentryEditToken = ConfigService.GetSecureValue("SENTRY_TOKEN_API") ?? "";
+        editandoSentry = true;
+    }
+
+    private void CancelarEdicaoSentry()
+    {
+        editandoSentry = false;
+        sentryEditToken = string.Empty;
+    }
+
+    private void SalvarSentry()
+    {
+        if (!string.IsNullOrWhiteSpace(sentryEditToken))
+        {
+            ConfigService.UpdateConfiguration("SENTRY_TOKEN_API", sentryEditToken);
+            
+            editandoSentry = false;
+            LoadIntegrationStatus();
+        }
     }
 
     private async Task TestSentry()

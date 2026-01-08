@@ -121,8 +121,11 @@ namespace Hotelaria.Services
                 if (colunas.Length >= 16)
                 {
                     dados.Nome = LimparTexto(colunas[0]);
+                    dados.NomeHospede = LimparTexto(colunas[0]); // Duplicar para compatibilidade
                     dados.NumeroDocumento = LimparTexto(colunas[1]);
+                    dados.DocumentoHospede = LimparTexto(colunas[1]); // Duplicar para compatibilidade
                     dados.Pais = LimparTexto(colunas[2]);
+                    dados.PaisHospede = LimparTexto(colunas[2]); // Duplicar para compatibilidade
                     dados.TipoDocumento = LimparTexto(colunas[3]);
                     dados.Cama = LimparTexto(colunas[4]);
                     dados.CheckIn = ParseData(colunas[5]);
@@ -136,11 +139,19 @@ namespace Hotelaria.Services
                     dados.Diaria = ParseDecimal(colunas[13]);
                     dados.Total = ParseDecimal(colunas[14]);
                     
-                    // Campos opcionais
+                    // Campos opcionais (estendidos)
+                    if (colunas.Length > 15)
+                        dados.LivreTX = ParseDecimal(colunas[15]);
+                    if (colunas.Length > 16)
+                        dados.DiariaPaga = ParseDecimal(colunas[16]);
+                    if (colunas.Length > 17)
+                        dados.EmailHospede = LimparTexto(colunas[17]);
                     if (colunas.Length > 18)
-                        dados.FormaPagamento = LimparTexto(colunas[18]);
+                        dados.TelefoneHospede = LimparTexto(colunas[18]);
                     if (colunas.Length > 19)
-                        dados.DataPagamento = ParseData(colunas[19]);
+                        dados.FormaPagamento = LimparTexto(colunas[19]);
+                    if (colunas.Length > 20)
+                        dados.DataPagamento = ParseData(colunas[20]);
 
                     // Extrair número do quarto da coluna "Cama"
                     ExtractQuartoEPessoas(dados);
@@ -233,6 +244,17 @@ namespace Hotelaria.Services
                 dados.Erros.Add("⚠️ Documento não informado");
             }
 
+            // Validações opcionais mas recomendadas
+            if (string.IsNullOrWhiteSpace(dados.EmailHospede))
+            {
+                dados.Erros.Add("💡 Email não informado - recomendado para contato");
+            }
+
+            if (string.IsNullOrWhiteSpace(dados.TelefoneHospede))
+            {
+                dados.Erros.Add("💡 Telefone não informado - recomendado para contato");
+            }
+
             if (!dados.CheckIn.HasValue)
             {
                 dados.IsValid = false;
@@ -294,16 +316,39 @@ namespace Hotelaria.Services
 
                     if (hospede == null)
                     {
+                        // Criar novo hóspede com todos os dados disponíveis
                         hospede = new Hospede
                         {
-                            Nome = item.NomeHospede,
-                            Email = item.EmailHospede,
-                            Telefone = item.TelefoneHospede,
-                            Documento = item.DocumentoHospede,
-                            Pais = item.PaisHospede,
+                            Nome = item.NomeHospede ?? item.Nome,
+                            Email = item.EmailHospede ?? "sem-email@importado.com",
+                            Telefone = item.TelefoneHospede ?? "N/A",
+                            Documento = item.DocumentoHospede ?? item.NumeroDocumento,
+                            Pais = item.PaisHospede ?? item.Pais,
                             DataCadastro = DateTime.Now
                         };
                         _hospedeService.AdicionarHospede(hospede);
+                    }
+                    else
+                    {
+                        // Atualizar informações do hóspede existente se novos dados disponíveis
+                        bool atualizar = false;
+                        
+                        if (string.IsNullOrEmpty(hospede.Email) && !string.IsNullOrEmpty(item.EmailHospede))
+                        {
+                            hospede.Email = item.EmailHospede;
+                            atualizar = true;
+                        }
+                        
+                        if (string.IsNullOrEmpty(hospede.Telefone) && !string.IsNullOrEmpty(item.TelefoneHospede))
+                        {
+                            hospede.Telefone = item.TelefoneHospede;
+                            atualizar = true;
+                        }
+                        
+                        if (atualizar)
+                        {
+                            _hospedeService.AtualizarHospede(hospede);
+                        }
                     }
 
                     // Encontrar ou criar quarto
@@ -320,8 +365,9 @@ namespace Hotelaria.Services
                             Capacidade = 2,
                             PrecoPorNoite = item.Diaria,
                             Status = StatusQuarto.Disponivel,
-                            Descricao = "Quarto importado",
-                            Comodidades = new List<string> { "Wi-Fi", "TV", "Ar condicionado" }
+                            Descricao = "Quarto importado automaticamente",
+                            Comodidades = new List<string> { "Wi-Fi", "TV", "Ar condicionado" },
+                            NumeroVagas = 1
                         };
                         _quartoService.AdicionarQuarto(quarto);
                     }

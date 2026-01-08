@@ -32,10 +32,9 @@ namespace Hotelaria.Services
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("X-Airbnb-API-Key", clientKey);
 
-                // Simulação de teste de conexão
-                await Task.Delay(100);
-                _isConnected = true;
-                _lastError = string.Empty;
+                var response = await _httpClient.GetAsync($"{baseUrl}/v2/");
+                _isConnected = response.IsSuccessStatusCode;
+                _lastError = _isConnected ? string.Empty : $"Status: {response.StatusCode}";
 
                 return _isConnected;
             }

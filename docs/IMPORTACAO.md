@@ -53,6 +53,18 @@ Seu arquivo deve ter a seguinte estrutura de colunas:
 | Nº Reserva | Código único | ✅ Sim | 6221128181 |
 | Diária | Valor diária | ⚠️ Recomendado | 20,40 € |
 | Total | Valor total | ✅ Sim | 43,80 € |
+| Livre TX | Valor livre de taxas | ⚠️ Opcional | 40,80 € |
+| Diária Paga | Diária fora paga | ⚠️ Opcional | 0,00 € |
+| Email | Email do hóspede | 💡 Recomendado | email@exemplo.com |
+| Telefone | Telefone do hóspede | 💡 Recomendado | +351 912 345 678 |
+| Forma Pgto | Forma de pagamento | ⚠️ Opcional | Multibanco |
+| Data Pgto | Data do pagamento | ⚠️ Opcional | 01/01/2026 |
+
+**Legenda:**
+- ✅ **Obrigatório:** Campo essencial, importação falhará se ausente
+- ⚠️ **Recomendado:** Não obrigatório, mas gera aviso se vazio
+- 💡 **Recomendado:** Facilita contato posterior com hóspede
+- ⚪ **Opcional:** Pode ficar vazio sem problemas
 
 ---
 
@@ -98,6 +110,8 @@ O sistema mostrará estatísticas detalhadas:
 - ⚠️ Quarto não identificado (atribuído quarto padrão)
 - ⚠️ Check-in muito antigo
 - ⚠️ Check-out muito distante
+- 💡 Email não informado - recomendado para contato
+- 💡 Telefone não informado - recomendado para contato
 
 ### **Passo 4: Preview dos Dados**
 
@@ -139,12 +153,18 @@ Revise as primeiras 5 linhas válidas:
 
 ### **Criação Automática:**
 - 🆕 **Hóspedes novos** criados se documento não existir
-  - Email temporário: `nome@importado.com`
-  - Telefone: vazio (preencher depois)
+  - Email: do CSV ou `sem-email@importado.com` (temporário)
+  - Telefone: do CSV ou "N/A" (preencher depois)
+  - Nome, documento e país obrigatórios
+- 🆕 **Atualização de hóspedes existentes**
+  - Se email estiver vazio, atualiza do CSV
+  - Se telefone estiver vazio, atualiza do CSV
+  - Mantém dados originais se já preenchidos
 - 🆕 **Quartos novos** criados se número não existir
   - Tipo: Standard
   - Capacidade: 2 pessoas
   - Comodidades padrão: Wi-Fi, TV, Ar condicionado
+  - 1 vaga por quarto
 - 🆕 **Reservas** com status baseado na data
   - Se check-in já passou: "Check-in Realizado"
   - Se check-in futuro: "Confirmada"
@@ -219,7 +239,7 @@ Revise as primeiras 5 linhas válidas:
 
 ### **Requisitos do Arquivo:**
 - Primeira linha deve conter cabeçalhos
-- Mínimo de 16 colunas (até 20 suportadas)
+- Mínimo de 16 colunas (até 21 suportadas)
 - Formato de texto (não Excel .xlsx)
 - Separador consistente em todo arquivo
 
@@ -269,16 +289,17 @@ Revise as primeiras 5 linhas válidas:
 ### **Exemplo TSV (Tab-separated):**
 
 ```tsv
-Nome	Nascimento	Nº Documento	País	Tipo Doc	Cama	Check-in	Check-out	Dias	Valor	Pago	TX Booking	TX pago	Nº reserva	Diaria	Total
-Mohamed Tarek	19/12/1995	YZ2PMXCC2	Alemanha	Passaporte	Q 3 - Cama 01	01/01/2026	03/01/2026	2	40,80 €	Online	3,00 €	-	6221128181	20,40 €	43,80 €
-Nassine Salam	24/08/1988	YSS034	Tunisia	Passaporte	Q 5 - Cama 02	01/01/2026	05/01/2026	4	-	Cartão	-	-	6221128182	18,00 €	72,00 €
+Nome	Nascimento	Nº Documento	País	Tipo Doc	Cama	Check-in	Check-out	Dias	Valor	Pago	TX Booking	TX pago	Nº reserva	Diaria	Total	Livre TX	Diaria Paga	Email	Telefone	Forma Pgto	Data Pgto
+Mohamed Tarek	19/12/1995	YZ2PMXCC2	Alemanha	Passaporte	Q 3 - Cama 01	01/01/2026	03/01/2026	2	40,80 €	Online	3,00 €	-	6221128181	20,40 €	43,80 €	40,80 €	-	mohamed@email.com	+49 123 456	Multibanco	01/01/2026
+Nassine Salam	24/08/1988	YSS034	Tunisia	Passaporte	Q 5 - Cama 02	01/01/2026	05/01/2026	4	-	Cartão	-	-	6221128182	18,00 €	72,00 €	72,00 €	-	nassine@email.com	+216 98 765 432	MB Way	01/01/2026
 ```
 
 ### **Exemplo CSV (Comma-separated):**
 
 ```csv
-Nome,Nascimento,Nº Documento,País,Tipo Doc,Cama,Check-in,Check-out,Dias,Valor,Pago,TX Booking,TX pago,Nº reserva,Diaria,Total
-"Mohamed Tarek",19/12/1995,YZ2PMXCC2,Alemanha,Passaporte,"Q 3 - Cama 01",01/01/2026,03/01/2026,2,"40,80 €",Online,"3,00 €",-,6221128181,"20,40 €","43,80 €"
+Nome,Nascimento,Nº Documento,País,Tipo Doc,Cama,Check-in,Check-out,Dias,Valor,Pago,TX Booking,TX pago,Nº reserva,Diaria,Total,Livre TX,Diaria Paga,Email,Telefone,Forma Pgto,Data Pgto
+"Mohamed Tarek",19/12/1995,YZ2PMXCC2,Alemanha,Passaporte,"Q 3 - Cama 01",01/01/2026,03/01/2026,2,"40,80 €",Online,"3,00 €",-,6221128181,"20,40 €","43,80 €","40,80 €",-,mohamed@email.com,+49 123 456,Multibanco,01/01/2026
+"Nassine Salam",24/08/1988,YSS034,Tunisia,Passaporte,"Q 5 - Cama 02",01/01/2026,05/01/2026,4,-,Cartão,-,-,6221128182,"18,00 €","72,00 €","72,00 €",-,nassine@email.com,+216 98 765 432,MB Way,01/01/2026
 ```
 
 ---

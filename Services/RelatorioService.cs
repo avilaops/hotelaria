@@ -69,7 +69,11 @@ namespace Hotelaria.Services
                 FormaPagamento = GetFormaPagamentoTexto(r.FormaPagamento),
                 DataPagamento = r.DataPagamento,
                 Status = r.Status,
-                QuartoNumero = r.Quarto?.Numero ?? r.NumeroQuarto ?? "N/A"
+                QuartoNumero = r.Quarto?.Numero ?? r.NumeroQuarto ?? "N/A",
+                NumeroDocumento = r.NumeroDocumentoHospede ?? r.Hospede?.Documento ?? "",
+                Pais = r.PaisHospede ?? r.Hospede?.Pais ?? "",
+                TipoDocumento = r.TipoDocumentoHospede ?? "",
+                DataNascimento = r.DataNascimentoHospede
             }).OrderByDescending(r => r.CheckIn).ToList();
         }
 
@@ -135,6 +139,12 @@ namespace Hotelaria.Services
         public int Id { get; set; }
         public string NumeroReserva { get; set; } = string.Empty;
         public string NomeHospede { get; set; } = string.Empty;
+        public string EmailHospede { get; set; } = string.Empty;
+        public string TelefoneHospede { get; set; } = string.Empty;
+        public string DocumentoHospede { get; set; } = string.Empty;
+        public string PaisHospede { get; set; } = string.Empty;
+        public string NumeroQuarto { get; set; } = string.Empty;
+        public string TipoQuarto { get; set; } = string.Empty;
         public DateTime? DataNascimento { get; set; }
         public string NumeroDocumento { get; set; } = string.Empty;
         public string Pais { get; set; } = string.Empty;

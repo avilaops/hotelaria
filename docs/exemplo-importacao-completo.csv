@@ -1,0 +1,6 @@
+Nome,Nascimento,Nº Documento,País,Tipo Doc,Cama,Check-in,Check-out,Dias,Valor,Pago,TX Booking,TX pago,Nº reserva,Diaria,Total,Livre TX,Diaria Paga,Email,Telefone,Forma Pgto,Data Pgto
+Mohamed Tarek Ibrahim,19/12/1995,YZ2PMXCC2,Alemanha,Passaporte,Q 3 - Cama 01,08/01/2026,10/01/2026,2,40.80,Online,3.00,-,TEST001,20.40,43.80,40.80,-,mohamed.tarek@email.com,+49 170 123 4567,Multibanco,08/01/2026
+Nassine Salam,24/08/1988,YSS034,Tunisia,Passaporte,Q 5 - Cama 02,08/01/2026,12/01/2026,4,72.00,Cartão,-,-,TEST002,18.00,72.00,72.00,-,nassine.salam@email.com,+216 98 765 432,MB Way,08/01/2026
+Ana Silva,15/03/1990,123456789,Brasil,CPF,Q 1 - Cama 01,09/01/2026,11/01/2026,2,50.00,PIX,2.50,-,TEST003,25.00,50.00,47.50,-,ana.silva@gmail.com,+55 11 98765-4321,PIX,09/01/2026
+João Santos,22/07/1985,987654321,Portugal,Cartão de Cidadão,Q 2 - Cama 01,10/01/2026,15/01/2026,5,150.00,Dinheiro,-,-,TEST004,30.00,150.00,150.00,-,joao.santos@hotmail.com,+351 912 345 678,Dinheiro,10/01/2026
+Maria Garcia,05/11/1992,ABC123XYZ,Espanha,Passaporte,Q 4 - Cama 01,11/01/2026,13/01/2026,2,60.00,Online,4.50,-,TEST005,30.00,64.50,60.00,-,maria.garcia@yahoo.es,+34 600 111 222,Transferência,11/01/2026

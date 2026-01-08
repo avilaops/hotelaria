@@ -33,10 +33,9 @@ namespace Hotelaria.Services
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiToken}");
 
-                // Simulação de teste de conexão
-                await Task.Delay(100);
-                _isConnected = true;
-                _lastError = string.Empty;
+                var response = await _httpClient.GetAsync($"{baseUrl}/");
+                _isConnected = response.IsSuccessStatusCode;
+                _lastError = _isConnected ? string.Empty : $"Status: {response.StatusCode}";
 
                 return _isConnected;
             }

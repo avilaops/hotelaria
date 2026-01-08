@@ -3,6 +3,11 @@ namespace Hotelaria.Models
     public class ReservaImport
     {
         public string Nome { get; set; } = string.Empty;
+        public string NomeHospede { get; set; } = string.Empty;
+        public string EmailHospede { get; set; } = string.Empty;
+        public string TelefoneHospede { get; set; } = string.Empty;
+        public string DocumentoHospede { get; set; } = string.Empty;
+        public string PaisHospede { get; set; } = string.Empty;
         public DateTime? DataNascimento { get; set; }
         public string NumeroDocumento { get; set; } = string.Empty;
         public string Pais { get; set; } = string.Empty;

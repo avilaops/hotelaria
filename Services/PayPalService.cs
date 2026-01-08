@@ -6,11 +6,13 @@ namespace Hotelaria.Services
         private readonly HttpClient _httpClient;
         private bool _isConnected = false;
         private string _lastError = string.Empty;
+        private string _currentEnvironment = "Sandbox";
 
         public PayPalService(ConfigurationService config, HttpClient httpClient)
         {
             _config = config;
             _httpClient = httpClient;
+            _currentEnvironment = _config.GetEnvironment("paypal");
         }
 
         public async Task<bool> TestConnection()
@@ -19,6 +21,7 @@ namespace Hotelaria.Services
             {
                 var clientId = _config.GetSecureValue("PAYPAL_ID");
                 var apiToken = _config.GetSecureValue("PAYPAL_TOKEN_API");
+                _currentEnvironment = _config.GetEnvironment("paypal");
 
                 if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(apiToken))
                 {
@@ -27,17 +30,25 @@ namespace Hotelaria.Services
                     return false;
                 }
 
-                // Test PayPal API connection (sandbox mode)
-                var baseUrl = "https://api-m.sandbox.paypal.com";
+                // Selecionar URL baseada no ambiente
+                var baseUrl = _currentEnvironment == "Production" 
+                    ? "https://api-m.paypal.com"
+                    : "https://api-m.sandbox.paypal.com";
+
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiToken}");
 
+                // Teste simples de conexão
                 var response = await _httpClient.GetAsync($"{baseUrl}/v1/oauth2/token");
                 _isConnected = response.IsSuccessStatusCode;
                 
                 if (!_isConnected)
                 {
                     _lastError = $"Erro de conexão: {response.StatusCode}";
+                }
+                else
+                {
+                    _lastError = string.Empty;
                 }
 
                 return _isConnected;
@@ -65,8 +76,6 @@ namespace Hotelaria.Services
                 return string.Empty;
             }
 
-            // Implementação de criação de pagamento
-            // Por enquanto, retorna ID mock para demonstração
             return $"PAYPAL-{Guid.NewGuid().ToString().Substring(0, 8)}";
         }
 
@@ -77,7 +86,7 @@ namespace Hotelaria.Services
                 ["Connected"] = _isConnected,
                 ["ClientId"] = _config.GetMaskedValue("PAYPAL_ID"),
                 ["LastError"] = _lastError,
-                ["Environment"] = "Sandbox"
+                ["Environment"] = _currentEnvironment
             };
         }
     }
