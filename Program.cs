@@ -86,11 +86,15 @@ app.Use(async (context, next) =>
     context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
     context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
     
-    if (!app.Environment.IsDevelopment())
-    {
-        context.Response.Headers.Append("Content-Security-Policy", 
-            "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;");
-    }
+    // CSP mais permissivo para Blazor funcionar corretamente
+    context.Response.Headers.Append("Content-Security-Policy", 
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " +
+        "style-src 'self' 'unsafe-inline' https:; " +
+        "img-src 'self' data: https:; " +
+        "font-src 'self' data:; " +
+        "connect-src 'self' wss: https:; " +
+        "frame-ancestors 'none';");
     
     await next();
 });
