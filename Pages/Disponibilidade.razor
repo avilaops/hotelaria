@@ -8,18 +8,27 @@
 <PageTitle>Calendário de Ocupação - Hotelaria</PageTitle>
 
 @code {
+    // ============================================
+    // ESTADO DA BUSCA DE QUARTOS
+    // ============================================
     private List<Quarto> quartosDisponiveis = new();
     private DateTime dataCheckIn = DateTime.Today.AddDays(1);
     private DateTime dataCheckOut = DateTime.Today.AddDays(2);
     private int capacidade = 2;
+    private bool exibirResultadosBusca = false; // ✅ Renomeado de mostrarBuscaQuartos
     
+    // ============================================
+    // ESTADO DO CALENDÁRIO
+    // ============================================
     private DateTime mesSelecionado = DateTime.Today;
     private List<Reserva> reservasMes = new();
     
-    private bool mostrarModalReserva = false;
+    // ============================================
+    // ESTADO DO MODAL DE RESERVA
+    // ============================================
+    private bool exibirModalReserva = false; // ✅ Renomeado de mostrarModalReserva
     private Reserva reservaEdicao = new();
     private int vagaSelecionada = 1;
-    private bool mostrarBuscaQuartos = false;
 
     protected override void OnInitialized()
     {
@@ -36,14 +45,27 @@
         CarregarReservasMes();
     }
 
+    // ============================================
+    // BUSCA DE QUARTOS
+    // ============================================
     private void BuscarDisponibilidade()
     {
         if (dataCheckOut > dataCheckIn)
         {
             quartosDisponiveis = QuartoService.BuscarQuartosDisponiveis(dataCheckIn, dataCheckOut, capacidade);
+            exibirResultadosBusca = true; // ✅ Usar variável renomeada
         }
     }
 
+    private void FecharResultadosBusca()
+    {
+        exibirResultadosBusca = false; // ✅ Usar variável renomeada
+        quartosDisponiveis.Clear();
+    }
+
+    // ============================================
+    // CALENDÁRIO
+    // ============================================
     private void CarregarReservasMes()
     {
         var inicioMes = new DateTime(mesSelecionado.Year, mesSelecionado.Month, 1);
@@ -90,30 +112,23 @@
             (r.Observacoes?.Contains($"Vaga:{vaga}") ?? false));
     }
 
+    // ============================================
+    // MODAL DE RESERVA
+    // ============================================
     private void AbrirDetalhesReserva(Reserva? reserva)
     {
         if (reserva != null && reserva.Hospede != null)
         {
             reservaEdicao = reserva;
-            mostrarModalReserva = true;
+            exibirModalReserva = true; // ✅ Usar variável renomeada
         }
     }
 
     private void FecharModalReserva()
     {
-        mostrarModalReserva = false;
+        exibirModalReserva = false; // ✅ Usar variável renomeada
         reservaEdicao = new();
         vagaSelecionada = 1;
-    }
-
-    private void MostrarBuscaQuartos()
-    {
-        mostrarBuscaQuartos = true;
-    }
-
-    private void FecharBuscaQuartos()
-    {
-        mostrarBuscaQuartos = false;
     }
 
     private void ClicarCelula(Quarto quarto, DateTime data, Reserva? reserva, int vaga)
@@ -143,7 +158,7 @@
                 NumeroCriancas = reserva.NumeroCriancas
             };
             vagaSelecionada = vaga;
-            mostrarModalReserva = true;
+            exibirModalReserva = true; // ✅ Usar variável renomeada
         }
         else
         {
@@ -166,7 +181,7 @@
             ValorTotal = quarto?.PrecoPorNoite ?? 20.00m
         };
         vagaSelecionada = vaga ?? 1;
-        mostrarModalReserva = true;
+        exibirModalReserva = true; // ✅ Usar variável renomeada
     }
 
     private void SalvarReserva()
@@ -200,6 +215,9 @@
         }
     }
 
+    // ============================================
+    // HELPERS
+    // ============================================
     private Quarto? GetQuartoSelecionado()
     {
         return QuartoService.ObterPorId(reservaEdicao.QuartoId);
