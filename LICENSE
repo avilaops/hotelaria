@@ -1,21 +1,74 @@
-MIT License
+# Licença Proprietária - Hotelaria Management System
 
-Copyright (c) 2026 Avila Ops
+**Copyright © 2026 Ávila Inc.**  
+**Todos os direitos reservados.**
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+---
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+## 📋 Termos e Condições
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Este software e toda a documentação associada (coletivamente, o "Software") são propriedade exclusiva da **Ávila Inc.** e estão protegidos por leis de direitos autorais e tratados internacionais.
+
+### ❌ **Restrições**
+
+**É EXPRESSAMENTE PROIBIDO:**
+
+1. **Copiar, reproduzir ou duplicar** qualquer parte do Software
+2. **Modificar, adaptar ou criar trabalhos derivados** baseados no Software
+3. **Distribuir, sublicenciar, vender, alugar ou emprestar** o Software
+4. **Realizar engenharia reversa, descompilar ou desmontar** o Software
+5. **Remover ou alterar** avisos de direitos autorais, marcas registradas ou avisos proprietários
+6. **Usar o Software** para fins comerciais sem licença expressa por escrito
+7. **Publicar ou compartilhar** o código-fonte em repositórios públicos
+
+### ✅ **Uso Permitido**
+
+O Software pode ser usado **exclusivamente** por:
+- **Colaboradores autorizados** da Ávila Inc.
+- **Clientes licenciados** com contrato válido
+- **Parceiros autorizados** mediante acordo específico
+
+### 🔐 **Confidencialidade**
+
+Este Software contém **informações confidenciais e proprietárias**. O acesso ao código-fonte implica em obrigação de confidencialidade perpétua.
+
+### ⚖️ **Garantias e Responsabilidades**
+
+O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA", SEM GARANTIAS DE QUALQUER TIPO, EXPRESSAS OU IMPLÍCITAS, INCLUINDO, MAS NÃO SE LIMITANDO A, GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM FIM ESPECÍFICO E NÃO VIOLAÇÃO.
+
+EM NENHUMA CIRCUNSTÂNCIA A ÁVILA INC. SERÁ RESPONSÁVEL POR QUALQUER RECLAMAÇÃO, DANOS OU OUTRA RESPONSABILIDADE, SEJA EM AÇÃO DE CONTRATO, DELITO OU DE OUTRA FORMA, DECORRENTE DE, OU EM CONEXÃO COM O SOFTWARE OU O USO OU OUTRAS NEGOCIAÇÕES NO SOFTWARE.
+
+### 📞 **Licenciamento Comercial**
+
+Para obter uma licença comercial para uso, modificação ou distribuição deste Software, entre em contato:
+
+**Ávila Inc.**  
+📧 Email: dev@avila.inc  
+👤 Contato: Nicolas Rosa  
+🌐 Website: [avila.inc](https://avila.inc)  
+
+### 🛡️ **Proteção Legal**
+
+Violações desta licença estão sujeitas a:
+- Ação judicial por violação de direitos autorais
+- Indenização por danos e lucros cessantes
+- Honorários advocatícios e custas judiciais
+- Medidas cautelares e liminares
+
+### 📅 **Vigência**
+
+Esta licença permanece em vigor até ser rescindida. Seus direitos sob esta licença cessarão automaticamente sem aviso da Ávila Inc. se você violar qualquer um de seus termos.
+
+---
+
+**Última atualização:** 08 de Janeiro de 2026  
+**Versão da Licença:** 1.0  
+**Versão do Software:** v2.6.1
+
+---
+
+## 🏢 **Sobre a Ávila Inc.**
+
+A Ávila Inc. é uma empresa especializada em desenvolvimento de software para gestão hoteleira, oferecendo soluções tecnológicas inovadoras e personalizadas para o setor de hospitalidade.
+
+**Desenvolvido com ❤️ em Portugal**
