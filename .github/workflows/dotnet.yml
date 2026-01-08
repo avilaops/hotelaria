@@ -95,29 +95,32 @@ jobs:
         name: dotnet-app
         path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
     
-    - name: 🚀 Deploy to Azure Web App
+    - name: 🔐 Azure Login (Service Principal)
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+      continue-on-error: true
+        
+    - name: 🚀 Deploy to Azure Web App (Publish Profile)
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-    
+      continue-on-error: false
+        
     - name: ✅ Deployment Summary
-      run: |
-        echo "## Deployment Successful 🚀" >> $GITHUB_STEP_SUMMARY
-        echo "- **Environment:** Production" >> $GITHUB_STEP_SUMMARY
-        echo "- **App Name:** ${{ env.AZURE_WEBAPP_NAME }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **URL:** ${{ steps.deploy-to-webapp.outputs.webapp-url }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Deployed at:** $(date)" >> $GITHUB_STEP_SUMMARY
-    
-    - name: 🔔 Deployment Notification
       if: always()
       run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "✅ Deployment completed successfully!"
+        echo "## Deployment Summary 🚀" >> $GITHUB_STEP_SUMMARY
+        echo "- **Environment:** Production" >> $GITHUB_STEP_SUMMARY
+        echo "- **App Name:** ${{ env.AZURE_WEBAPP_NAME }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ steps.deploy-to-webapp.outcome }}" == "success" ]; then
+          echo "- **URL:** https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net" >> $GITHUB_STEP_SUMMARY
         else
-          echo "❌ Deployment failed!"
+          echo "- **Error:** Deployment failed. Check publish profile or Azure credentials." >> $GITHUB_STEP_SUMMARY
         fi
 
   # ============================================
