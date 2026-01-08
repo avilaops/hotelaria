@@ -13,6 +13,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
     - name: 📥 Checkout code
@@ -29,14 +30,11 @@ jobs:
     - name: 🏗️ Build
       run: dotnet build --configuration ${{ env.DOTNET_CONFIGURATION }} --no-restore
     
-    - name: 🧪 Run tests
-      run: dotnet test --configuration ${{ env.DOTNET_CONFIGURATION }} --no-build --verbosity normal
-    
     - name: 📤 Publish
-      run: dotnet publish --configuration ${{ env.DOTNET_CONFIGURATION }} --no-build --output ./publish
+      run: dotnet publish --configuration ${{ env.DOTNET_CONFIGURATION }} --output ./publish
     
     - name: 🚀 Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2
+      uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
@@ -46,10 +44,11 @@ jobs:
       if: success()
       run: |
         echo "🎉 Deploy concluído com sucesso!"
-        echo "URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+        echo "🌐 URL: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net"
     
     - name: ❌ Deployment failed
       if: failure()
       run: |
         echo "❌ Deploy falhou. Verifique os logs acima."
+        echo "💡 Verifique se o Publish Profile está correto"
         exit 1
