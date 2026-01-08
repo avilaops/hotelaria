@@ -33,14 +33,14 @@
             @if (tentativasRestantes < 5 && tentativasRestantes > 0)
             {
                 <div class="alert-warning-minimal">
-                    <span>⚠️ @tentativasRestantes tentativa@(tentativasRestantes > 1 ? "s" : "") restante@(tentativasRestantes > 1 ? "s" : "")</span>
+                    <span>@GetTentativasMessage()</span>
                 </div>
             }
 
             @if (bloqueadoAte.HasValue)
             {
                 <div class="alert-danger-minimal">
-                    <span>🔒 Conta bloqueada até @bloqueadoAte.Value.ToString("HH:mm:ss")</span>
+                    <span>@GetBloqueioMessage()</span>
                 </div>
             }
 
@@ -84,7 +84,6 @@
             </label>
         </div>
 
-        <!-- Credenciais de Teste - APENAS EM DESENVOLVIMENTO -->
         @if (isDevelopment)
         {
             <div class="test-credentials">
@@ -145,6 +144,18 @@
 
         // Verificar ambiente
         isDevelopment = Configuration.GetValue<string>("ASPNETCORE_ENVIRONMENT") == "Development";
+    }
+
+    private string GetTentativasMessage()
+    {
+        var tentativasText = tentativasRestantes > 1 ? "tentativas" : "tentativa";
+        var restanteText = tentativasRestantes > 1 ? "restantes" : "restante";
+        return $"⚠️ {tentativasRestantes} {tentativasText} {restanteText}";
+    }
+
+    private string GetBloqueioMessage()
+    {
+        return $"🔒 Conta bloqueada até {bloqueadoAte.Value:HH:mm:ss}";
     }
 
     private async Task RealizarLogin()
