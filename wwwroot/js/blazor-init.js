@@ -26,10 +26,12 @@
                 return;
             }
             
-            // Configurar reconexão
-            Blazor.defaultReconnectionHandler._reconnectCallback = function() {
-                console.log('[BLAZOR] Tentando reconectar...');
-            };
+            // Configurar reconexão (com verificação de existência)
+            if (Blazor.defaultReconnectionHandler && typeof Blazor.defaultReconnectionHandler === 'object') {
+                Blazor.defaultReconnectionHandler._reconnectCallback = function() {
+                    console.log('[BLAZOR] Tentando reconectar...');
+                };
+            }
             
             console.log('[BLAZOR] Iniciando Blazor...');
         } else {
