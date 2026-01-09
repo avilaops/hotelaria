@@ -7,6 +7,12 @@ on:
     branches: [ main ]
   workflow_dispatch: # Permite execução manual
 
+# ✅ SEGURANÇA: Definir permissões explícitas (CodeQL Security #5)
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
 env:
   DOTNET_VERSION: '9.0.x'  # ✅ CORRIGIDO: .NET 9
   BUILD_CONFIGURATION: 'Release'
