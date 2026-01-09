@@ -8,9 +8,9 @@ on:
   workflow_dispatch: # Permite execução manual
 
 env:
-  DOTNET_VERSION: '8.0.x'
+  DOTNET_VERSION: '9.0.x'  # ✅ CORRIGIDO: .NET 9
   BUILD_CONFIGURATION: 'Release'
-  AZURE_WEBAPP_NAME: 'hotelaria-app' # Nome do seu Web App no Azure
+  AZURE_WEBAPP_NAME: 'hotelaria-app'
   AZURE_WEBAPP_PACKAGE_PATH: './publish'
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
     - name: 📥 Checkout code
       uses: actions/checkout@v6
       with:
-        fetch-depth: 0 # Necessário para análise de código
+        fetch-depth: 0
     
     - name: ⚙️ Setup .NET
       uses: actions/setup-dotnet@v4
@@ -56,7 +56,18 @@ jobs:
       continue-on-error: true
     
     - name: 📦 Publish
-      run: dotnet publish --no-build --configuration ${{ env.BUILD_CONFIGURATION }} --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      run: dotnet publish --configuration ${{ env.BUILD_CONFIGURATION }} --output ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-restore
+    
+    - name: 🔍 Verify DLL exists
+      run: |
+        echo "📁 Checking published files..."
+        ls -lah ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        if [ ! -f "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/Hotelaria.dll" ]; then
+          echo "❌ ERROR: Hotelaria.dll not found!"
+          exit 1
+        else
+          echo "✅ Hotelaria.dll found!"
+        fi
     
     - name: 🗜️ Upload artifact for deployment
       uses: actions/upload-artifact@v6
