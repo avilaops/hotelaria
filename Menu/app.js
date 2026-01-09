@@ -161,6 +161,12 @@ class MenuEditor {
         document.getElementById('btnExportPDF').addEventListener('click', () => this.exportAsPDF());
         document.getElementById('btnPrint').addEventListener('click', () => window.print());
         
+        // NEW: Backup/Restore functions
+        document.getElementById('btnBackupAll').addEventListener('click', () => this.backupAllData());
+        document.getElementById('btnRestoreData').addEventListener('click', () => this.restoreData());
+        document.getElementById('btnExportJSON').addEventListener('click', () => this.exportCurrentAsJSON());
+        document.getElementById('btnImportJSON').addEventListener('click', () => this.importFromJSON());
+        
         // Add items
         document.getElementById('btnAddCategory').addEventListener('click', () => this.showCategoryModal());
         document.getElementById('btnAddItem').addEventListener('click', () => this.showItemModal());
@@ -187,6 +193,148 @@ class MenuEditor {
                 e.target.classList.remove('show');
             }
         });
+    }
+    
+    // NEW: Backup and Restore Functions
+    backupAllData() {
+        try {
+            const backup = {
+                versions: this.versions,
+                exportDate: new Date().toISOString(),
+                appVersion: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(backup, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `menu-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Backup criado com sucesso!\n\nGuarde este arquivo em um lugar seguro.\nVocê pode usar este arquivo para restaurar todos os seus menus em qualquer dispositivo.');
+        } catch (error) {
+            console.error('Error creating backup:', error);
+            alert('❌ Erro ao criar backup. Tente novamente.');
+        }
+    }
+    
+    restoreData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const backup = JSON.parse(event.target.result);
+                    
+                    if (!backup.versions || !Array.isArray(backup.versions)) {
+                        throw new Error('Arquivo de backup inválido');
+                    }
+                    
+                    const confirmMsg = `Restaurar backup com ${backup.versions.length} versão(ões)?\n\n⚠️ ATENÇÃO: Isso irá SUBSTITUIR todas as versões atuais!\n\nData do backup: ${new Date(backup.exportDate).toLocaleString('pt-PT')}`;
+                    
+                    if (confirm(confirmMsg)) {
+                        this.versions = backup.versions;
+                        this.saveVersions();
+                        
+                        if (this.versions.length > 0) {
+                            this.loadVersion(this.versions[0].id);
+                        }
+                        
+                        alert('✅ Backup restaurado com sucesso!\n\nTodas as suas versões foram recuperadas.');
+                    }
+                } catch (error) {
+                    console.error('Error restoring backup:', error);
+                    alert('❌ Erro ao restaurar backup.\n\nVerifique se o arquivo é um backup válido.');
+                }
+            };
+            
+            reader.readAsText(file);
+        };
+        
+        input.click();
+    }
+    
+    exportCurrentAsJSON() {
+        if (!this.currentVersion) {
+            alert('Nenhuma versão selecionada');
+            return;
+        }
+        
+        try {
+            const data = {
+                version: this.currentVersion,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${this.currentVersion.name.replace(/[^a-z0-9]/gi, '-')}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Menu exportado como JSON!\n\nVocê pode compartilhar este arquivo com sua equipe.');
+        } catch (error) {
+            console.error('Error exporting JSON:', error);
+            alert('❌ Erro ao exportar JSON');
+        }
+    }
+    
+    importFromJSON() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    
+                    if (!imported.version || !imported.version.data) {
+                        throw new Error('Arquivo JSON inválido');
+                    }
+                    
+                    // Create new version from imported data
+                    const newVersion = {
+                        id: Date.now().toString(),
+                        name: imported.version.name + ' (Importado)',
+                        createdAt: new Date().toISOString(),
+                        data: imported.version.data
+                    };
+                    
+                    this.versions.unshift(newVersion);
+                    this.saveVersions();
+                    this.loadVersion(newVersion.id);
+                    
+                    alert('✅ Menu importado com sucesso!\n\nUma nova versão foi criada com os dados importados.');
+                } catch (error) {
+                    console.error('Error importing JSON:', error);
+                    alert('❌ Erro ao importar JSON.\n\nVerifique se o arquivo é um menu válido.');
+                }
+            };
+            
+            reader.readAsText(file);
+        };
+        
+        input.click();
     }
     
     // Version Management

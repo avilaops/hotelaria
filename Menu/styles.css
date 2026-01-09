@@ -203,6 +203,29 @@ body {
     transform: translateY(-2px);
 }
 
+/* Special backup/restore button styles */
+.btn-backup {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+.btn-backup:hover {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%) !important;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+}
+
+.btn-restore {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%) !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+.btn-restore:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #21618c 100%) !important;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+
 /* Main Canvas Container */
 .menu-canvas-container {
     flex: 1;
