@@ -5,8 +5,14 @@ on:
     branches: [ develop ]
   workflow_dispatch:
 
+# ✅ SEGURANÇA: Permissões explícitas (CodeQL #4)
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
 env:
-  DOTNET_VERSION: '8.0.x'
+  DOTNET_VERSION: '9.0.x'  # ✅ Atualizado para .NET 9
   BUILD_CONFIGURATION: 'Release'
   AZURE_WEBAPP_NAME: 'hotelaria-app-staging' # Nome do ambiente staging
 
@@ -44,7 +50,7 @@ jobs:
     
     - name: 🚀 Deploy to Azure Staging
       id: deploy-to-webapp
-      uses: azure/webapps-deploy@v3
+      uses: azure/webapps-deploy@85270a1854658d167ab239bce43949edb336fa7c  # ✅ v3 pinned
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}

@@ -5,9 +5,15 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# ✅ SEGURANÇA: Permissões explícitas (CodeQL #1)
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
 env:
-  AZURE_WEBAPP_NAME: hotelaria-app    # Substitua pelo nome do seu App Service
-  DOTNET_VERSION: '8.0.x'
+  AZURE_WEBAPP_NAME: hotelaria-app
+  DOTNET_VERSION: '9.0.x'  # ✅ Atualizado para .NET 9
   DOTNET_CONFIGURATION: Release
 
 jobs:
@@ -34,7 +40,7 @@ jobs:
       run: dotnet publish --configuration ${{ env.DOTNET_CONFIGURATION }} --output ./publish
     
     - name: 🚀 Deploy to Azure Web App
-      uses: azure/webapps-deploy@v3
+      uses: azure/webapps-deploy@85270a1854658d167ab239bce43949edb336fa7c  # ✅ v3 pinned (CodeQL #9)
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
