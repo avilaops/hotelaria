@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Editor - Samba Hotel</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-utensils"></i> Menu Editor</h1>
+            </div>
+
+            <!-- Menu Versions -->
+            <section class="sidebar-section">
+                <h3><i class="fas fa-folder-open"></i> Versões Salvas</h3>
+                <div class="versions-list" id="versionsList">
+                    <button class="btn-new-version" id="btnNewVersion">
+                        <i class="fas fa-plus"></i> Nova Versão
+                    </button>
+                </div>
+            </section>
+
+            <!-- Theme Customization -->
+            <section class="sidebar-section">
+                <h3><i class="fas fa-palette"></i> Tema</h3>
+                <div class="theme-controls">
+                    <label>
+                        Cor de Fundo:
+                        <input type="color" id="bgColor" value="#4a7171">
+                    </label>
+                    <label>
+                        Cor do Texto:
+                        <input type="color" id="textColor" value="#ffffff">
+                    </label>
+                    <label>
+                        Cor de Destaque:
+                        <input type="color" id="accentColor" value="#ffd700">
+                    </label>
+                    <label>
+                        Tamanho da Fonte:
+                        <input type="range" id="fontSize" min="12" max="24" value="16">
+                        <span id="fontSizeValue">16px</span>
+                    </label>
+                    <label>
+                        Fonte:
+                        <select id="fontFamily">
+                            <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                            <option value="Arial, sans-serif">Arial</option>
+                            <option value="'Courier New', monospace">Courier</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                        </select>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Export Options -->
+            <section class="sidebar-section">
+                <h3><i class="fas fa-download"></i> Exportar</h3>
+                <div class="export-controls">
+                    <button class="btn-export" id="btnExportPNG">
+                        <i class="fas fa-image"></i> Exportar PNG
+                    </button>
+                    <button class="btn-export" id="btnExportPDF">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
+                    </button>
+                    <button class="btn-export" id="btnPrint">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
+                </div>
+            </section>
+
+            <!-- Add Items -->
+            <section class="sidebar-section">
+                <h3><i class="fas fa-plus-circle"></i> Adicionar</h3>
+                <div class="add-controls">
+                    <button class="btn-add" id="btnAddCategory">
+                        <i class="fas fa-th-large"></i> Nova Categoria
+                    </button>
+                    <button class="btn-add" id="btnAddItem">
+                        <i class="fas fa-plus"></i> Novo Item
+                    </button>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Main Menu Canvas -->
+        <main class="menu-canvas-container">
+            <div class="toolbar">
+                <button class="btn-tool" id="btnSave" title="Salvar">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+                <button class="btn-tool" id="btnUndo" title="Desfazer">
+                    <i class="fas fa-undo"></i>
+                </button>
+                <button class="btn-tool" id="btnRedo" title="Refazer">
+                    <i class="fas fa-redo"></i>
+                </button>
+                <button class="btn-tool" id="btnZoomIn" title="Aumentar Zoom">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+                <button class="btn-tool" id="btnZoomOut" title="Diminuir Zoom">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <button class="btn-tool" id="btnResetZoom" title="Zoom 100%">
+                    <i class="fas fa-expand"></i> 100%
+                </button>
+            </div>
+
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <div class="menu-canvas" id="menuCanvas">
+                    <!-- Menu Header -->
+                    <div class="menu-header" contenteditable="false">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='90' fill='%23ffd700' stroke='%23333' stroke-width='8'/%3E%3Ctext x='100' y='120' font-size='60' text-anchor='middle' fill='%23333' font-weight='bold'%3ESAMBA%3C/text%3E%3C/svg%3E" 
+                             alt="Samba Logo" class="menu-logo" id="menuLogo">
+                    </div>
+
+                    <!-- Menu Content -->
+                    <div class="menu-content" id="menuContent">
+                        <!-- Categories will be dynamically loaded here -->
+                    </div>
+
+                    <!-- Menu Footer -->
+                    <div class="menu-footer" id="menuFooter">
+                        <div class="footer-note" contenteditable="true">
+                            <p>❄️Cold drinks available</p>
+                            <p>💳Cash & Card accepted</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Adding/Editing Category -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <span class="close" id="closeCategoryModal">&times;</span>
+            <h2 id="categoryModalTitle">Nova Categoria</h2>
+            <form id="categoryForm">
+                <label>
+                    Nome da Categoria:
+                    <input type="text" id="categoryName" required>
+                </label>
+                <label>
+                    Ícone (emoji ou código):
+                    <input type="text" id="categoryIcon" placeholder="🍕">
+                </label>
+                <label>
+                    Posição:
+                    <select id="categoryPosition">
+                        <option value="left">Esquerda</option>
+                        <option value="right">Direita</option>
+                    </select>
+                </label>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="button" class="btn-secondary" id="cancelCategory">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Adding/Editing Item -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <span class="close" id="closeItemModal">&times;</span>
+            <h2 id="itemModalTitle">Novo Item</h2>
+            <form id="itemForm">
+                <label>
+                    Categoria:
+                    <select id="itemCategory" required></select>
+                </label>
+                <label>
+                    Nome do Item:
+                    <input type="text" id="itemName" required>
+                </label>
+                <label>
+                    Preço:
+                    <input type="text" id="itemPrice" placeholder="1,50€" required>
+                </label>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="button" class="btn-secondary" id="cancelItem">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
