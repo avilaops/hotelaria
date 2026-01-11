@@ -1,0 +1,40 @@
+# CodeQL Configuration
+# https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning
+
+name: "CodeQL Security Scanning"
+
+# Disable default queries and use custom queries
+disable-default-queries: false
+
+# Query filters
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Paths to exclude from analysis
+paths-ignore:
+  - '**/node_modules/**'
+  - '**/bin/**'
+  - '**/obj/**'
+  - '**/*.min.js'
+  - '**/*.min.css'
+  - '**/wwwroot/lib/**'
+  - '**/docs/**'
+  - '**/*.md'
+
+# Paths to include in analysis
+paths:
+  - '**/*.cs'
+  - '**/*.razor'
+  - '**/*.yml'
+  - '**/*.yaml'
+
+# Language-specific configuration
+languages:
+  - csharp
+  - javascript
+
+# Query packs to use
+packs:
+  - codeql/csharp-queries
+  - codeql/javascript-queries

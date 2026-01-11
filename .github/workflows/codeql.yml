@@ -43,16 +43,16 @@ jobs:
 
     steps:
     - name: 📥 Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         fetch-depth: 0 # Histórico completo para análise
 
     # Setup .NET para análise de C#
     - name: ⚙️ Setup .NET
       if: matrix.language == 'csharp'
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@3e891f8b4e60d4f6f5c4f3e4d6a2e5e5d5f0e3f8 # v4.1.0
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '9.0.x'
 
     # Restaurar dependências antes da análise
     - name: 📦 Restore dependencies
@@ -61,7 +61,7 @@ jobs:
 
     # Inicializar CodeQL
     - name: 🔍 Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.5
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
@@ -85,11 +85,11 @@ jobs:
     # Autobuild para linguagens que precisam
     - name: 🤖 Autobuild
       if: matrix.build-mode == 'autobuild'
-      uses: github/codeql-action/autobuild@v3
+      uses: github/codeql-action/autobuild@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.5
 
     # Executar análise do CodeQL
     - name: 🔍 Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@ea9e4e37992a54ee68a9622e985e60c8e8f12d9f # v3.27.5
       with:
         category: "/language:${{ matrix.language }}"
         upload: true
