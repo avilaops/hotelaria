@@ -98,6 +98,14 @@ builder.Services.AddHttpClient<SentryService>(client =>
     client.DefaultRequestHeaders.Add("User-Agent", "Hotelaria/2.6.2");
 });
 
+// Ollama Service para IA
+builder.Services.AddHttpClient<OllamaService>(client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(5); // Maior timeout para IA
+    client.DefaultRequestHeaders.Add("User-Agent", "Hotelaria/2.6.2");
+});
+logger.LogInformation("✅ OllamaService registrado");
+
 // MongoDB Service com tratamento de erro
 try
 {

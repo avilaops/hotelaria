@@ -1,0 +1,696 @@
+@page "/assistente-ia"
+@inject OllamaService OllamaService
+@inject ReservaService ReservaService
+@inject QuartoService QuartoService
+
+<PageTitle>Assistente IA - Hotelaria</PageTitle>
+
+<div class="assistente-ia-page">
+    <div class="page-header">
+        <div class="header-icon">🤖</div>
+        <h1>Assistente IA</h1>
+        <p class="subtitle">Powered by Ollama</p>
+    </div>
+
+    <!-- Status de Conexão -->
+    <div class="connection-status @(conexaoOk ? "connected" : "disconnected")">
+        <span class="status-icon">@(conexaoOk ? "✅" : "❌")</span>
+        <span>@(conexaoOk ? "Ollama Conectado" : "Ollama Desconectado")</span>
+        @if (!string.IsNullOrEmpty(modeloAtual))
+        {
+            <span class="model-badge">@modeloAtual</span>
+        }
+        <button class="btn-refresh" @onclick="VerificarConexao">🔄 Verificar</button>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="quick-actions">
+        <h2>⚡ Ações Rápidas</h2>
+        <div class="actions-grid">
+            <button class="action-card" @onclick="AnalisarOcupacaoAtual" disabled="@processando">
+                <div class="card-icon">📊</div>
+                <h3>Analisar Ocupação</h3>
+                <p>Análise inteligente do período atual</p>
+            </button>
+
+            <button class="action-card" @onclick="SugerirPrecosQuartos" disabled="@processando">
+                <div class="card-icon">💰</div>
+                <h3>Sugerir Preços</h3>
+                <p>Otimização de preços dos quartos</p>
+            </button>
+
+            <button class="action-card" @onclick="GerarRelatorio" disabled="@processando">
+                <div class="card-icon">📈</div>
+                <h3>Relatório Financeiro</h3>
+                <p>Análise financeira com IA</p>
+            </button>
+
+            <button class="action-card" @onclick="OtimizarDescricoes" disabled="@processando">
+                <div class="card-icon">✍️</div>
+                <h3>Otimizar Descrições</h3>
+                <p>Melhorar descrições dos quartos</p>
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-section">
+        <h2>💬 Chat com Assistente</h2>
+        
+        <div class="chat-container">
+            <div class="messages-area" @ref="messagesArea">
+                @foreach (var msg in mensagens)
+                {
+                    <div class="message @msg.Role">
+                        <div class="message-avatar">
+                            @(msg.Role == "user" ? "👤" : "🤖")
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">@msg.Content</div>
+                            <div class="message-time">@msg.Timestamp.ToString("HH:mm")</div>
+                        </div>
+                    </div>
+                }
+                
+                @if (processando)
+                {
+                    <div class="message assistant">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">
+                            <div class="typing-indicator">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="chat-input-area">
+                <textarea 
+                    class="chat-input" 
+                    @bind="mensagemUsuario"
+                    @onkeydown="HandleKeyDown"
+                    placeholder="Digite sua pergunta... (Shift+Enter para nova linha, Enter para enviar)"
+                    rows="2"
+                    disabled="@processando">
+                </textarea>
+                <button class="btn-send" @onclick="EnviarMensagem" disabled="@(processando || string.IsNullOrWhiteSpace(mensagemUsuario))">
+                    <span>@(processando ? "⏳" : "📤")</span>
+                    Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    @if (!string.IsNullOrEmpty(ultimoResultado))
+    {
+        <div class="result-panel">
+            <div class="result-header">
+                <h3>📋 Último Resultado</h3>
+                <button class="btn-close" @onclick="() => ultimoResultado = string.Empty">✕</button>
+            </div>
+            <div class="result-content">
+                @((MarkupString)ultimoResultado.Replace("\n", "<br>"))
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .assistente-ia-page {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .header-icon {
+        font-size: 4rem;
+        margin-bottom: 10px;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: #333;
+        margin: 0;
+    }
+
+    .subtitle {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    /* Connection Status */
+    .connection-status {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .connection-status.connected {
+        border-left: 4px solid #4CAF50;
+    }
+
+    .connection-status.disconnected {
+        border-left: 4px solid #F44336;
+    }
+
+    .status-icon {
+        font-size: 1.5rem;
+    }
+
+    .model-badge {
+        background: #E3F2FD;
+        color: #1976D2;
+        padding: 5px 12px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .btn-refresh {
+        margin-left: auto;
+        padding: 8px 16px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .btn-refresh:hover {
+        background: #1976D2;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        margin-bottom: 30px;
+    }
+
+    .quick-actions h2 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .action-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+    }
+
+    .action-card:not(:disabled):hover {
+        border-color: #2196F3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(33,150,243,0.3);
+    }
+
+    .action-card:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .card-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+
+    .action-card h3 {
+        color: #333;
+        margin: 10px 0;
+        font-size: 1.2rem;
+    }
+
+    .action-card p {
+        color: #666;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* Chat */
+    .chat-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .chat-section h2 {
+        padding: 20px;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+    }
+
+    .messages-area {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: #f5f5f5;
+    }
+
+    .message {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message.user {
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .message-content {
+        max-width: 70%;
+    }
+
+    .message.user .message-content {
+        text-align: right;
+    }
+
+    .message-text {
+        background: white;
+        padding: 12px 16px;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .message.user .message-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        color: #999;
+        margin-top: 5px;
+    }
+
+    .typing-indicator {
+        display: flex;
+        gap: 5px;
+        padding: 12px;
+    }
+
+    .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #999;
+        animation: typing 1.4s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @@keyframes typing {
+        0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.5;
+        }
+        30% {
+            transform: translateY(-10px);
+            opacity: 1;
+        }
+    }
+
+    .chat-input-area {
+        padding: 20px;
+        background: white;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 10px;
+    }
+
+    .chat-input {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 50px;
+    }
+
+    .chat-input:focus {
+        outline: none;
+        border-color: #2196F3;
+    }
+
+    .btn-send {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+
+    .btn-send:not(:disabled):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+    }
+
+    .btn-send:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Result Panel */
+    .result-panel {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .result-header {
+        background: #4CAF50;
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .result-header h3 {
+        margin: 0;
+    }
+
+    .btn-close {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+
+    .btn-close:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .result-content {
+        padding: 25px;
+        line-height: 1.8;
+        color: #333;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .actions-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chat-container {
+            height: 500px;
+        }
+
+        .message-content {
+            max-width: 85%;
+        }
+    }
+</style>
+
+@code {
+    private ElementReference messagesArea;
+    private bool conexaoOk = false;
+    private string? modeloAtual;
+    private bool processando = false;
+    private string mensagemUsuario = "";
+    private string ultimoResultado = "";
+    private List<ChatMessage> mensagens = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await VerificarConexao();
+        AdicionarMensagemSistema("👋 Olá! Sou o assistente IA do sistema de hotelaria. Como posso ajudá-lo hoje?");
+    }
+
+    private async Task VerificarConexao()
+    {
+        conexaoOk = await OllamaService.VerificarConexao();
+        
+        if (conexaoOk)
+        {
+            var modelos = await OllamaService.ListarModelosDisponiveis();
+            modeloAtual = modelos.FirstOrDefault() ?? "Modelo não detectado";
+        }
+    }
+
+    private async Task EnviarMensagem()
+    {
+        if (string.IsNullOrWhiteSpace(mensagemUsuario) || processando) return;
+
+        var pergunta = mensagemUsuario;
+        mensagens.Add(new ChatMessage
+        {
+            Role = "user",
+            Content = pergunta,
+            Timestamp = DateTime.Now
+        });
+
+        mensagemUsuario = "";
+        processando = true;
+
+        try
+        {
+            var resposta = await OllamaService.GerarResposta(pergunta);
+            mensagens.Add(new ChatMessage
+            {
+                Role = "assistant",
+                Content = resposta,
+                Timestamp = DateTime.Now
+            });
+        }
+        catch (Exception ex)
+        {
+            mensagens.Add(new ChatMessage
+            {
+                Role = "assistant",
+                Content = $"Erro: {ex.Message}",
+                Timestamp = DateTime.Now
+            });
+        }
+        finally
+        {
+            processando = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task AnalisarOcupacaoAtual()
+    {
+        processando = true;
+        ultimoResultado = "";
+
+        try
+        {
+            var hoje = DateTime.Today;
+            var inicioMes = new DateTime(hoje.Year, hoje.Month, 1);
+            var fimMes = inicioMes.AddMonths(1).AddDays(-1);
+
+            var reservas = ReservaService.FiltrarPorPeriodo(inicioMes, fimMes);
+            
+            ultimoResultado = await OllamaService.AnalisarOcupacao(inicioMes, fimMes, reservas);
+            AdicionarMensagemSistema($"📊 Análise de ocupação concluída para {inicioMes:MMMM/yyyy}");
+        }
+        catch (Exception ex)
+        {
+            ultimoResultado = $"Erro ao analisar ocupação: {ex.Message}";
+        }
+        finally
+        {
+            processando = false;
+        }
+    }
+
+    private async Task SugerirPrecosQuartos()
+    {
+        processando = true;
+        ultimoResultado = "";
+
+        try
+        {
+            var quartos = QuartoService.ObterTodos();
+            var sugestoes = new List<string>();
+
+            foreach (var quarto in quartos.Take(3)) // Limitar a 3 para não demorar muito
+            {
+                var sugestao = await OllamaService.SugerirPreco(
+                    quarto.Tipo.ToString(),
+                    quarto.Capacidade,
+                    DateTime.Today.AddDays(7),
+                    quarto.PrecoPorNoite
+                );
+                sugestoes.Add($"**{quarto.Numero}**: {sugestao}");
+            }
+
+            ultimoResultado = string.Join("\n\n", sugestoes);
+            AdicionarMensagemSistema("💰 Sugestões de preços geradas com sucesso");
+        }
+        catch (Exception ex)
+        {
+            ultimoResultado = $"Erro ao sugerir preços: {ex.Message}";
+        }
+        finally
+        {
+            processando = false;
+        }
+    }
+
+    private async Task GerarRelatorio()
+    {
+        processando = true;
+        ultimoResultado = "";
+
+        try
+        {
+            var hoje = DateTime.Today;
+            var inicioMes = new DateTime(hoje.Year, hoje.Month, 1);
+
+            var reservas = ReservaService.FiltrarPorPeriodo(inicioMes, hoje);
+            var receita = reservas.Sum(r => r.ValorTotal);
+            var despesas = receita * 0.35m; // Estimativa de 35% de despesas
+
+            ultimoResultado = await OllamaService.GerarRelatorioFinanceiro(receita, despesas, reservas.Count);
+            AdicionarMensagemSistema("📈 Relatório financeiro gerado");
+        }
+        catch (Exception ex)
+        {
+            ultimoResultado = $"Erro ao gerar relatório: {ex.Message}";
+        }
+        finally
+        {
+            processando = false;
+        }
+    }
+
+    private async Task OtimizarDescricoes()
+    {
+        processando = true;
+        ultimoResultado = "";
+
+        try
+        {
+            var quartos = QuartoService.ObterTodos();
+            var descricoes = new List<string>();
+
+            foreach (var quarto in quartos.Take(2))
+            {
+                var comodidades = new List<string> { "WiFi", "TV", "Ar Condicionado", "Banheiro Privativo" };
+                var descricao = await OllamaService.OtimizarDescricaoQuarto(
+                    quarto.Tipo.ToString(),
+                    quarto.Capacidade,
+                    comodidades
+                );
+                descricoes.Add($"**{quarto.Numero} ({quarto.Tipo})**:\n{descricao}");
+            }
+
+            ultimoResultado = string.Join("\n\n---\n\n", descricoes);
+            AdicionarMensagemSistema("✍️ Descrições otimizadas geradas");
+        }
+        catch (Exception ex)
+        {
+            ultimoResultado = $"Erro ao otimizar descrições: {ex.Message}";
+        }
+        finally
+        {
+            processando = false;
+        }
+    }
+
+    private void AdicionarMensagemSistema(string texto)
+    {
+        mensagens.Add(new ChatMessage
+        {
+            Role = "assistant",
+            Content = texto,
+            Timestamp = DateTime.Now
+        });
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await EnviarMensagem();
+        }
+    }
+
+    private class ChatMessage
+    {
+        public string Role { get; set; } = "";
+        public string Content { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+    }
+}
