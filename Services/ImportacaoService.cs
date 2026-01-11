@@ -477,7 +477,7 @@ namespace Hotelaria.Services
             if (string.IsNullOrWhiteSpace(valor)) return null;
 
             // Usar DateValidator.ParseDate
-            var (success, date, error) = DateValidator.ParseDate(valor.Trim());
+            var (success, date, _) = DateValidator.ParseDate(valor.Trim());
             
             if (success && date.HasValue)
             {

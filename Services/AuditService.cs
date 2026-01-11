@@ -10,28 +10,24 @@ namespace Hotelaria.Services
     public class AuditService
     {
         private readonly ILogger<AuditService> _logger;
-        private readonly AuthService _authService;
         private readonly List<AuditLog> _auditLogs = new();
 
-        public AuditService(ILogger<AuditService> logger, AuthService authService)
+        public AuditService(ILogger<AuditService> logger)
         {
             _logger = logger;
-            _authService = authService;
         }
 
         /// <summary>
         /// Registra uma ação no log de auditoria
         /// </summary>
-        public void LogAction(string action, string entity, object? details = null, string? ipAddress = null)
+        public void LogAction(string action, string entity, string? usuario = null, int? usuarioId = null, object? details = null, string? ipAddress = null)
         {
-            var usuario = _authService.ObterUsuarioAtual();
-            
             var auditLog = new AuditLog
             {
                 Id = Guid.NewGuid(),
                 Timestamp = DateTime.UtcNow,
-                Usuario = usuario?.Username ?? "Sistema",
-                UsuarioId = usuario?.Id ?? 0,
+                Usuario = usuario ?? "Sistema",
+                UsuarioId = usuarioId ?? 0,
                 Action = action,
                 Entity = entity,
                 Details = details != null ? JsonSerializer.Serialize(details) : null,

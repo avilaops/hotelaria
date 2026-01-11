@@ -1,7 +1,6 @@
 @page "/hospedes"
 @inject HospedeService HospedeService
 @inject ReservaService ReservaService
-@inject AuthService AuthService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Hóspedes - Hotelaria</PageTitle>
@@ -268,20 +267,6 @@
 
     protected override void OnInitialized()
     {
-        // Verificar autenticação
-        if (!AuthService.EstaAutenticado())
-        {
-            NavigationManager.NavigateTo("/login");
-            return;
-        }
-
-        // Verificar permissão (Recepcionista pode gerenciar hóspedes)
-        if (!AuthService.TemPermissao(PerfilUsuario.Recepcionista))
-        {
-            NavigationManager.NavigateTo("/");
-            return;
-        }
-
         CarregarHospedes();
     }
 

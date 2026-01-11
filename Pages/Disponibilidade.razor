@@ -2,10 +2,1010 @@
 @inject QuartoService QuartoService
 @inject ReservaService ReservaService
 @inject HospedeService HospedeService
-@inject AuthService AuthService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Calendário de Ocupação - Hotelaria</PageTitle>
+
+<div class="disponibilidade-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-icon">📅</div>
+        <h1>Calendário de Ocupação</h1>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <div class="search-icon">🔍</div>
+        <span class="search-label">Buscar Disponibilidade</span>
+        
+        <div class="search-inputs">
+            <div class="input-group">
+                <label>Check-in:</label>
+                <input type="date" @bind="dataCheckIn" />
+            </div>
+            
+            <div class="input-group">
+                <label>Check-out:</label>
+                <input type="date" @bind="dataCheckOut" />
+            </div>
+            
+            <div class="input-group">
+                <label>Capacidade:</label>
+                <input type="number" @bind="capacidade" min="1" max="10" />
+            </div>
+            
+            <button class="btn-search" @onclick="BuscarDisponibilidade">
+                Buscar
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    @if (exibirResultadosBusca && quartosDisponiveis.Any())
+    {
+        <div class="search-results-panel">
+            <div class="results-header">
+                <h3>✅ @quartosDisponiveis.Count quarto(s) disponível(is)</h3>
+                <button class="btn-close" @onclick="FecharResultadosBusca">✕</button>
+            </div>
+            <div class="results-grid">
+                @foreach (var quarto in quartosDisponiveis)
+                {
+                    <div class="result-card">
+                        <div class="card-header">
+                            <strong>@quarto.Numero</strong>
+                            <span class="tipo-badge">@GetTipoTexto(quarto.Tipo)</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <span>🛏️ @GetVagasDisponiveisQuarto(quarto.Id, dataCheckIn, dataCheckOut) de @quarto.NumeroVagas vagas</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="price">€ @quarto.PrecoPorNoite / noite</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Calendar Navigation -->
+    <div class="calendar-navigation">
+        <button class="nav-btn" @onclick="MesAnterior" title="Mês anterior">◄</button>
+        <div class="current-month">
+            <button class="month-name" @onclick="MesAtual">
+                @mesSelecionado.ToString("MMMM yyyy")
+            </button>
+            <button class="today-btn" @onclick="MesAtual">Hoje</button>
+        </div>
+        <button class="nav-btn" @onclick="ProximoMes" title="Próximo mês">►</button>
+    </div>
+
+    <!-- Legend -->
+    <div class="calendar-legend">
+        <div class="legend-item">
+            <span class="legend-box disponivel"></span>
+            <span>Disponível</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-box ocupado"></span>
+            <span>Ocupado</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-box checkin"></span>
+            <span>🔑 Check-in</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-box checkout"></span>
+            <span>🚪 Check-out</span>
+        </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="calendar-wrapper">
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th class="room-column">Quarto</th>
+                    @for (int dia = 1; dia <= DateTime.DaysInMonth(mesSelecionado.Year, mesSelecionado.Month); dia++)
+                    {
+                        var data = new DateTime(mesSelecionado.Year, mesSelecionado.Month, dia);
+                        var isToday = data.Date == DateTime.Today;
+                        var isWeekend = data.DayOfWeek == DayOfWeek.Saturday || data.DayOfWeek == DayOfWeek.Sunday;
+                        
+                        <th class="day-column @(isToday ? "today" : "") @(isWeekend ? "weekend" : "")">
+                            <div class="day-number">@dia</div>
+                            <div class="day-name">@data.ToString("ddd").Substring(0, 3)</div>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var quarto in QuartoService.ObterTodos())
+                {
+                    <!-- Room Header Row -->
+                    <tr class="room-header-row">
+                        <td class="room-info" rowspan="@(quarto.NumeroVagas + 1)">
+                            <div class="room-number">@quarto.Numero</div>
+                            <div class="room-type">@GetTipoTexto(quarto.Tipo)</div>
+                            <div class="room-capacity">🛏️ @quarto.NumeroVagas vagas</div>
+                            <div class="room-price">€ @quarto.PrecoPorNoite</div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Rows for each bed/spot -->
+                    @for (int vaga = 1; vaga <= quarto.NumeroVagas; vaga++)
+                    {
+                        var vagaLocal = vaga;
+                        <tr class="bed-row">
+                            @for (int dia = 1; dia <= DateTime.DaysInMonth(mesSelecionado.Year, mesSelecionado.Month); dia++)
+                            {
+                                var data = new DateTime(mesSelecionado.Year, mesSelecionado.Month, dia);
+                                var reserva = ObterReservaDiaVaga(quarto.Id, data, vagaLocal);
+                                var status = GetStatusCelula(reserva, data, quarto.Status);
+                                var isToday = data.Date == DateTime.Today;
+                                var isWeekend = data.DayOfWeek == DayOfWeek.Saturday || data.DayOfWeek == DayOfWeek.Sunday;
+                                
+                                <td class="calendar-cell @status @(isToday ? "today-column" : "") @(isWeekend ? "weekend-column" : "")"
+                                    @onclick="() => ClicarCelula(quarto, data, reserva, vagaLocal)"
+                                    title="@GetTooltipCelula(quarto, data, reserva, vagaLocal)">
+                                    @if (reserva != null)
+                                    {
+                                        <div class="reservation-info">
+                                            <span class="guest-name">@GetPrimeiroNome(reserva.Hospede?.Nome)</span>
+                                            @if (reserva.CheckIn.Date == data)
+                                            {
+                                                <span class="check-icon">🔑</span>
+                                            }
+                                            @if (reserva.CheckOut.Date == data)
+                                            {
+                                                <span class="check-icon">🚪</span>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Statistics Panel -->
+    <div class="stats-panel">
+        <div class="stat-box ocupacao">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+                <div class="stat-value">@GetTaxaOcupacao()%</div>
+                <div class="stat-label">Taxa de Ocupação</div>
+            </div>
+        </div>
+        
+        <div class="stat-box vagas">
+            <div class="stat-icon">🛏️</div>
+            <div class="stat-content">
+                <div class="stat-value">@GetVagasDisponiveis()</div>
+                <div class="stat-label">Vagas Disponíveis</div>
+            </div>
+        </div>
+        
+        <div class="stat-box checkins">
+            <div class="stat-icon">🔑</div>
+            <div class="stat-content">
+                <div class="stat-value">@GetCheckInsHoje()</div>
+                <div class="stat-label">Check-ins Hoje</div>
+            </div>
+        </div>
+        
+        <div class="stat-box checkouts">
+            <div class="stat-icon">🚪</div>
+            <div class="stat-content">
+                <div class="stat-value">@GetCheckOutsHoje()</div>
+                <div class="stat-label">Check-outs Hoje</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Reservation -->
+@if (exibirModalReserva)
+{
+    <div class="modal-backdrop" @onclick="FecharModalReserva">
+        <div class="modal-dialog" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h3>@(reservaEdicao.Id == 0 ? "➕ Nova Reserva" : "✏️ Editar Reserva")</h3>
+                <button class="btn-close-modal" @onclick="FecharModalReserva">✕</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Quarto</label>
+                        <select @bind="reservaEdicao.QuartoId" disabled="@(reservaEdicao.Id != 0)">
+                            @foreach (var q in QuartoService.ObterTodos())
+                            {
+                                <option value="@q.Id">@q.Numero - @GetTipoTexto(q.Tipo)</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="form-field">
+                        <label>Vaga / Cama</label>
+                        <input type="number" @bind="vagaSelecionada" 
+                               min="1" max="@(GetQuartoSelecionado()?.NumeroVagas ?? 1)" />
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-field full-width">
+                        <label>Hóspede</label>
+                        <select @bind="reservaEdicao.HospedeId">
+                            <option value="0">-- Selecione um hóspede --</option>
+                            @foreach (var h in HospedeService.ObterTodos())
+                            {
+                                <option value="@h.Id">@h.Nome - @h.Email</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Check-in</label>
+                        <input type="datetime-local" @bind="reservaEdicao.CheckIn" />
+                    </div>
+                    
+                    <div class="form-field">
+                        <label>Check-out</label>
+                        <input type="datetime-local" @bind="reservaEdicao.CheckOut" />
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>Valor Total (€)</label>
+                        <input type="number" step="0.01" @bind="reservaEdicao.ValorTotal" />
+                    </div>
+                    
+                    <div class="form-field">
+                        <label>Status</label>
+                        <select @bind="reservaEdicao.Status">
+                            @foreach (StatusReserva status in Enum.GetValues(typeof(StatusReserva)))
+                            {
+                                <option value="@status">@GetStatusTexto(status)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-field full-width">
+                        <label>Observações</label>
+                        <textarea @bind="reservaEdicao.Observacoes" rows="3" 
+                                  placeholder="Adicione observações sobre a reserva..."></textarea>
+                    </div>
+                </div>
+                
+                @if (reservaEdicao.CheckIn != default && reservaEdicao.CheckOut != default)
+                {
+                    var noites = (reservaEdicao.CheckOut - reservaEdicao.CheckIn).Days;
+                    <div class="reservation-summary">
+                        <div class="summary-item">
+                            <span class="label">Período:</span>
+                            <span class="value">@noites noite(s)</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Total:</span>
+                            <span class="value price">€ @reservaEdicao.ValorTotal.ToString("N2")</span>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <div class="modal-footer">
+                @if (reservaEdicao.Id != 0)
+                {
+                    <button class="btn btn-danger" @onclick="ExcluirReserva">
+                        🗑️ Excluir
+                    </button>
+                }
+                <button class="btn btn-secondary" @onclick="FecharModalReserva">
+                    Cancelar
+                </button>
+                <button class="btn btn-primary" @onclick="SalvarReserva">
+                    💾 Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .disponibilidade-page {
+        padding: 20px;
+        background: #f5f5f5;
+        min-height: 100vh;
+    }
+
+    /* Header */
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .header-icon {
+        font-size: 2.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        color: #333;
+        margin: 0;
+    }
+
+    /* Search Bar */
+    .search-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .search-icon {
+        font-size: 1.5rem;
+    }
+
+    .search-label {
+        font-weight: 600;
+        color: #333;
+        font-size: 1.1rem;
+    }
+
+    .search-inputs {
+        display: flex;
+        gap: 15px;
+        flex: 1;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .input-group label {
+        font-size: 0.85rem;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .input-group input {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.95rem;
+    }
+
+    .btn-search {
+        padding: 8px 24px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .btn-search:hover {
+        background: #1976D2;
+    }
+
+    /* Search Results */
+    .search-results-panel {
+        background: #E8F5E9;
+        border: 2px solid #4CAF50;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .results-header h3 {
+        color: #2E7D32;
+        margin: 0;
+    }
+
+    .btn-close {
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+    }
+
+    .result-card {
+        background: white;
+        border-radius: 6px;
+        padding: 15px;
+        border: 1px solid #C8E6C9;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .tipo-badge {
+        background: #E3F2FD;
+        color: #1976D2;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .info-row {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .price {
+        color: #2E7D32;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    /* Calendar Navigation */
+    .calendar-navigation {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .nav-btn {
+        background: #f0f0f0;
+        border: 1px solid #ddd;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+        background: #e0e0e0;
+    }
+
+    .current-month {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .month-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .today-btn {
+        padding: 6px 16px;
+        background: #FFF3E0;
+        border: 1px solid #FFB74D;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #E65100;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .today-btn:hover {
+        background: #FFE0B2;
+    }
+
+    /* Legend */
+    .calendar-legend {
+        background: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
+        display: flex;
+        gap: 25px;
+        flex-wrap: wrap;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+    }
+
+    .legend-box {
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
+        border: 1px solid #ddd;
+    }
+
+    .legend-box.disponivel {
+        background: #E8F5E9;
+    }
+
+    .legend-box.ocupado {
+        background: #BBDEFB;
+    }
+
+    .legend-box.checkin {
+        background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+    }
+
+    .legend-box.checkout {
+        background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+    }
+
+    /* Calendar */
+    .calendar-wrapper {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow-x: auto;
+        margin-bottom: 20px;
+    }
+
+    .calendar-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 1200px;
+    }
+
+    .calendar-table thead th {
+        background: #1976D2;
+        color: white;
+        padding: 10px 5px;
+        text-align: center;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .calendar-table thead th.room-column {
+        width: 120px;
+        min-width: 120px;
+        background: #1565C0;
+        position: sticky;
+        left: 0;
+        z-index: 11;
+    }
+
+    .day-column {
+        width: 35px;
+        min-width: 35px;
+    }
+
+    .day-column.today {
+        background: #FFA000;
+    }
+
+    .day-column.weekend {
+        background: #0D47A1;
+    }
+
+    .day-number {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .day-name {
+        font-size: 0.7rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+    }
+
+    .room-info {
+        background: #E3F2FD;
+        padding: 15px 10px;
+        text-align: center;
+        border-right: 2px solid #2196F3;
+        position: sticky;
+        left: 0;
+        z-index: 5;
+        vertical-align: top;
+    }
+
+    .room-number {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1565C0;
+        margin-bottom: 5px;
+    }
+
+    .room-type {
+        font-size: 0.85rem;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .room-capacity {
+        font-size: 0.8rem;
+        color: #757575;
+        margin-bottom: 5px;
+    }
+
+    .room-price {
+        font-size: 0.9rem;
+        color: #2E7D32;
+        font-weight: 600;
+    }
+
+    .bed-row {
+        border-bottom: 1px solid #eee;
+    }
+
+    .calendar-cell {
+        padding: 8px 4px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-right: 1px solid #eee;
+        position: relative;
+        min-height: 40px;
+    }
+
+    .calendar-cell.disponivel {
+        background: #E8F5E9;
+    }
+
+    .calendar-cell.disponivel:hover {
+        background: #C8E6C9;
+    }
+
+    .calendar-cell.ocupado {
+        background: #BBDEFB;
+    }
+
+    .calendar-cell.ocupado:hover {
+        background: #90CAF9;
+    }
+
+    .calendar-cell.checkin {
+        background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .calendar-cell.checkout {
+        background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .calendar-cell.limpeza {
+        background: #FFF9C4;
+    }
+
+    .calendar-cell.manutencao {
+        background: #FFCCBC;
+    }
+
+    .calendar-cell.today-column {
+        border-left: 2px solid #FFA000;
+        border-right: 2px solid #FFA000;
+    }
+
+    .calendar-cell.weekend-column {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .reservation-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .guest-name {
+        font-size: 0.75rem;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .check-icon {
+        font-size: 0.9rem;
+    }
+
+    /* Statistics */
+    .stats-panel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .stat-box {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1976D2;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .stat-box.ocupacao .stat-value {
+        color: #2196F3;
+    }
+
+    .stat-box.vagas .stat-value {
+        color: #4CAF50;
+    }
+
+    .stat-box.checkins .stat-value {
+        color: #FF9800;
+    }
+
+    .stat-box.checkouts .stat-value {
+        color: #F44336;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+
+    .modal-dialog {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: #333;
+    }
+
+    .btn-close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #999;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .form-field.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-field label {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.95rem;
+    }
+
+    .form-field textarea {
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .reservation-summary {
+        background: #E3F2FD;
+        padding: 15px;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 15px;
+    }
+
+    .summary-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .summary-item .label {
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .summary-item .value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #1976D2;
+    }
+
+    .summary-item .value.price {
+        color: #2E7D32;
+    }
+
+    .modal-footer {
+        padding: 20px;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: #2196F3;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1976D2;
+    }
+
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #333;
+    }
+
+    .btn-secondary:hover {
+        background: #e0e0e0;
+    }
+
+    .btn-danger {
+        background: #F44336;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #D32F2F;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .search-inputs {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .input-group {
+            width: 100%;
+        }
+
+        .btn-search {
+            width: 100%;
+        }
+
+        .results-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-panel {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 
 @code {
     // ============================================
@@ -32,13 +1032,6 @@
 
     protected override void OnInitialized()
     {
-        // Verificar autenticação
-        if (!AuthService.EstaAutenticado())
-        {
-            NavigationManager.NavigateTo("/login");
-            return;
-        }
-
         // Todos os usuários autenticados podem ver disponibilidade
         // Mas apenas Recepcionista+ podem criar/editar reservas
 
@@ -133,13 +1126,6 @@
 
     private void ClicarCelula(Quarto quarto, DateTime data, Reserva? reserva, int vaga)
     {
-        // Verificar permissão para editar
-        if (!AuthService.TemPermissao(PerfilUsuario.Recepcionista))
-        {
-            // Visualizador não pode criar/editar
-            return;
-        }
-
         if (reserva != null)
         {
             // Editar reserva existente

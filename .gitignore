@@ -69,10 +69,13 @@ Desktop.ini
 *.sqlite
 *.sqlite3
 
-## Secrets
+## Secrets and Environment Variables
 appsettings.Development.json
 secrets.json
 *.pfx
+.env
+.env.local
+.env.*.local
 
 ## Node
 node_modules/

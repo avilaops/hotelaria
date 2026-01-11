@@ -6,17 +6,10 @@ namespace Hotelaria.Services
     public class ConfigurationService
     {
         private readonly Dictionary<string, string> _secureConfig = new();
-        private AuthService? _authService; // REMOVIDO readonly
         
         public ConfigurationService()
         {
             LoadEnvironmentVariables();
-        }
-
-        // Método para injetar AuthService após inicialização
-        public void SetAuthService(AuthService authService)
-        {
-            _authService = authService;
         }
 
         private void LoadEnvironmentVariables()
@@ -41,19 +34,6 @@ namespace Hotelaria.Services
         private string GetEnvironmentVariable(string key)
         {
             return Environment.GetEnvironmentVariable(key) ?? string.Empty;
-        }
-
-        /// <summary>
-        /// Valida acesso usando AuthService ao invés de credenciais hardcoded
-        /// CORRIGIDO: Removidas senhas hardcoded por motivos de segurança
-        /// </summary>
-        public bool ValidateAccess()
-        {
-            if (_authService == null)
-                return false;
-                
-            return _authService.EstaAutenticado() && 
-                   _authService.TemPermissao(Models.PerfilUsuario.Administrador);
         }
 
         public Dictionary<string, bool> GetIntegrationStatus()

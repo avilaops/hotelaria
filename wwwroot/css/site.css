@@ -2580,3 +2580,79 @@ textarea.form-control {
     cursor: not-allowed;
     opacity: 0.6;
 }
+
+/* Credenciais de Teste (apenas DEV) */
+.test-credentials {
+    margin-top: 24px;
+    padding: 16px;
+    background: #f5f5f7;
+    border-radius: 12px;
+    border: 1.5px solid #d2d2d7;
+}
+
+.credentials-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #1d1d1f;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.credentials-header svg {
+    color: #003580;
+}
+
+.credentials-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.credential {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #1d1d1f;
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+}
+
+.credential .role {
+    font-weight: 600;
+    color: #003580;
+}
+
+.credential .separator {
+    color: #86868b;
+}
+
+.credential code {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 12px;
+    color: #1d1d1f;
+    background: #f5f5f7;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Footer */
+.login-footer {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #d2d2d7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #86868b;
+}
+
+.login-footer .separator {
+    color: #d2d2d7;
+}

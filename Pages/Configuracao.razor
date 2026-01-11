@@ -1,22 +1,7 @@
 @page "/configuracao"
 @inject NavigationManager NavigationManager
-@inject AuthService AuthService
 
 <PageTitle>Configurações - Hotelaria</PageTitle>
-
-@code {
-    protected override void OnInitialized()
-    {
-        // Verificar autenticação
-        if (!AuthService.EstaAutenticado())
-        {
-            NavigationManager.NavigateTo("/login");
-            return;
-        }
-
-        // Todos podem acessar configuração, mas cards específicos têm suas próprias proteções
-    }
-}
 
 <div class="page-header">
     <h1>⚙️ Configurações</h1>
@@ -65,48 +50,6 @@
         </div>
     </div>
 
-    <!-- Sistema -->
-    <div class="config-section">
-        <div class="section-header">
-            <div class="section-icon">⚙️</div>
-            <div class="section-info">
-                <h2>Sistema</h2>
-                <p>Configurações gerais do sistema</p>
-            </div>
-        </div>
-
-        <div class="config-cards">
-            <div class="config-card" @onclick='() => NavigationManager.NavigateTo("/usuarios")'>
-                <div class="card-icon">👤</div>
-                <div class="card-content">
-                    <h3>Usuários e Permissões</h3>
-                    <p>Gerencie usuários e níveis de acesso</p>
-                </div>
-                <div class="card-arrow">→</div>
-            </div>
-
-            <div class="config-card disabled">
-                <div class="card-icon">🌐</div>
-                <div class="card-content">
-                    <h3>Idioma e Região</h3>
-                    <p>Configure idioma, moeda e fuso horário</p>
-                    <span class="badge-soon">Em breve</span>
-                </div>
-                <div class="card-arrow">→</div>
-            </div>
-
-            <div class="config-card disabled">
-                <div class="card-icon">🔔</div>
-                <div class="card-content">
-                    <h3>Notificações</h3>
-                    <p>Configure alertas e notificações</p>
-                    <span class="badge-soon">Em breve</span>
-                </div>
-                <div class="card-arrow">→</div>
-            </div>
-        </div>
-    </div>
-
     <!-- Integrações -->
     <div class="config-section">
         <div class="section-header">
@@ -123,7 +66,6 @@
                 <div class="card-content">
                     <h3>APIs e Serviços</h3>
                     <p>PayPal, MongoDB, Airbnb, Sentry</p>
-                    <span class="badge-config">Área Restrita</span>
                 </div>
                 <div class="card-arrow">→</div>
             </div>
@@ -205,19 +147,15 @@
         <div class="info-grid">
             <div class="info-item">
                 <span class="info-label">Versão:</span>
-                <span class="info-value">2.5.0</span>
+                <span class="info-value">2.6.3</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Ambiente:</span>
-                <span class="info-value">Desenvolvimento</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Tecnologia:</span>
-                <span class="info-value">Blazor Server (.NET 8)</span>
+                <span class="info-label">Framework:</span>
+                <span class="info-value">Blazor Server (.NET 9)</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Última Atualização:</span>
-                <span class="info-value">07/01/2026</span>
+                <span class="info-value">10/01/2026</span>
             </div>
         </div>
     </div>

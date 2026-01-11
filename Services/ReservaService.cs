@@ -21,110 +21,88 @@ namespace Hotelaria.Services
             var hospedes = _hospedeService.ObterTodos();
             var quartos = _quartoService.ObterTodos();
 
-            if (hospedes.Any() && quartos.Any())
+            if (!hospedes.Any() || !quartos.Any()) return;
+
+            int reservaId = 0;
+            
+            // Quarto 1 (8 vagas) - Preencher apenas 3 vagas como exemplo
+            CriarReservasQuarto(quartos[0], 1, hospedes[0], new DateTime(2026, 1, 7), new DateTime(2026, 1, 10), ref reservaId);
+            CriarReservasQuarto(quartos[0], 1, hospedes[1], new DateTime(2026, 1, 10), new DateTime(2026, 1, 14), ref reservaId);
+            CriarReservasQuarto(quartos[0], 1, hospedes[2], new DateTime(2026, 1, 14), new DateTime(2026, 1, 18), ref reservaId);
+            CriarReservasQuarto(quartos[0], 1, hospedes[3], new DateTime(2026, 1, 18), new DateTime(2026, 1, 22), ref reservaId);
+            CriarReservasQuarto(quartos[0], 1, hospedes[4], new DateTime(2026, 1, 22), new DateTime(2026, 1, 26), ref reservaId);
+            CriarReservasQuarto(quartos[0], 1, hospedes[5], new DateTime(2026, 1, 26), new DateTime(2026, 1, 31), ref reservaId);
+            
+            CriarReservasQuarto(quartos[0], 2, hospedes[6], new DateTime(2026, 1, 7), new DateTime(2026, 1, 12), ref reservaId);
+            CriarReservasQuarto(quartos[0], 2, hospedes[7], new DateTime(2026, 1, 12), new DateTime(2026, 1, 17), ref reservaId);
+            CriarReservasQuarto(quartos[0], 2, hospedes[8], new DateTime(2026, 1, 17), new DateTime(2026, 1, 23), ref reservaId);
+            CriarReservasQuarto(quartos[0], 2, hospedes[9], new DateTime(2026, 1, 23), new DateTime(2026, 1, 31), ref reservaId);
+            
+            CriarReservasQuarto(quartos[0], 3, hospedes[10], new DateTime(2026, 1, 8), new DateTime(2026, 1, 13), ref reservaId);
+            CriarReservasQuarto(quartos[0], 3, hospedes[11], new DateTime(2026, 1, 13), new DateTime(2026, 1, 19), ref reservaId);
+            CriarReservasQuarto(quartos[0], 3, hospedes[12], new DateTime(2026, 1, 19), new DateTime(2026, 1, 25), ref reservaId);
+            CriarReservasQuarto(quartos[0], 3, hospedes[13], new DateTime(2026, 1, 25), new DateTime(2026, 1, 31), ref reservaId);
+
+            // Quarto 2 (6 vagas) - Preencher 2 vagas
+            CriarReservasQuarto(quartos[1], 1, hospedes[14], new DateTime(2026, 1, 7), new DateTime(2026, 1, 11), ref reservaId);
+            CriarReservasQuarto(quartos[1], 1, hospedes[15], new DateTime(2026, 1, 11), new DateTime(2026, 1, 16), ref reservaId);
+            CriarReservasQuarto(quartos[1], 1, hospedes[16], new DateTime(2026, 1, 16), new DateTime(2026, 1, 21), ref reservaId);
+            CriarReservasQuarto(quartos[1], 1, hospedes[17], new DateTime(2026, 1, 21), new DateTime(2026, 1, 31), ref reservaId);
+            
+            CriarReservasQuarto(quartos[1], 2, hospedes[18], new DateTime(2026, 1, 7), new DateTime(2026, 1, 14), ref reservaId);
+            CriarReservasQuarto(quartos[1], 2, hospedes[19], new DateTime(2026, 1, 14), new DateTime(2026, 1, 20), ref reservaId);
+            CriarReservasQuarto(quartos[1], 2, hospedes[20], new DateTime(2026, 1, 20), new DateTime(2026, 1, 31), ref reservaId);
+
+            // Quarto 3 (4 vagas) - Preencher 2 vagas
+            CriarReservasQuarto(quartos[2], 1, hospedes[21], new DateTime(2026, 1, 7), new DateTime(2026, 1, 15), ref reservaId);
+            CriarReservasQuarto(quartos[2], 1, hospedes[22], new DateTime(2026, 1, 15), new DateTime(2026, 1, 24), ref reservaId);
+            CriarReservasQuarto(quartos[2], 1, hospedes[23], new DateTime(2026, 1, 24), new DateTime(2026, 1, 31), ref reservaId);
+            
+            CriarReservasQuarto(quartos[2], 2, hospedes[0], new DateTime(2026, 1, 9), new DateTime(2026, 1, 17), ref reservaId);
+            CriarReservasQuarto(quartos[2], 2, hospedes[1], new DateTime(2026, 1, 17), new DateTime(2026, 1, 26), ref reservaId);
+
+            // Quarto 4 (3 vagas) - Preencher 2 vagas
+            CriarReservasQuarto(quartos[3], 1, hospedes[2], new DateTime(2026, 1, 7), new DateTime(2026, 1, 12), ref reservaId);
+            CriarReservasQuarto(quartos[3], 1, hospedes[3], new DateTime(2026, 1, 12), new DateTime(2026, 1, 19), ref reservaId);
+            CriarReservasQuarto(quartos[3], 1, hospedes[4], new DateTime(2026, 1, 19), new DateTime(2026, 1, 31), ref reservaId);
+            
+            CriarReservasQuarto(quartos[3], 2, hospedes[5], new DateTime(2026, 1, 8), new DateTime(2026, 1, 16), ref reservaId);
+            CriarReservasQuarto(quartos[3], 2, hospedes[6], new DateTime(2026, 1, 16), new DateTime(2026, 1, 28), ref reservaId);
+
+            // Quarto 5 (2 vagas) - Preencher ambas
+            CriarReservasQuarto(quartos[4], 1, hospedes[7], new DateTime(2026, 1, 7), new DateTime(2026, 1, 13), ref reservaId);
+            CriarReservasQuarto(quartos[4], 1, hospedes[8], new DateTime(2026, 1, 13), new DateTime(2026, 1, 20), ref reservaId);
+            CriarReservasQuarto(quartos[4], 1, hospedes[9], new DateTime(2026, 1, 20), new DateTime(2026, 1, 31), ref reservaId);
+            
+            CriarReservasQuarto(quartos[4], 2, hospedes[10], new DateTime(2026, 1, 7), new DateTime(2026, 1, 16), ref reservaId);
+            CriarReservasQuarto(quartos[4], 2, hospedes[11], new DateTime(2026, 1, 16), new DateTime(2026, 1, 25), ref reservaId);
+            CriarReservasQuarto(quartos[4], 2, hospedes[12], new DateTime(2026, 1, 25), new DateTime(2026, 1, 31), ref reservaId);
+        }
+
+        private void CriarReservasQuarto(Quarto quarto, int vaga, Hospede hospede, DateTime checkIn, DateTime checkOut, ref int reservaId)
+        {
+            var dias = (checkOut - checkIn).Days;
+            var valorTotal = quarto.PrecoPorNoite * dias;
+            var comissao = valorTotal * 0.15m;
+
+            AdicionarReserva(new Reserva
             {
-                // Matheus Ferreira - Quarto 1
-                AdicionarReserva(new Reserva
-                {
-                    NumeroReserva = "5553486426",
-                    HospedeId = hospedes[0].Id,
-                    QuartoId = quartos[0].Id,
-                    CheckIn = new DateTime(2026, 1, 7),
-                    CheckOut = new DateTime(2026, 1, 8),
-                    DataReserva = new DateTime(2026, 1, 4),
-                    Status = StatusReserva.Confirmada,
-                    NumeroAdultos = 1,
-                    NumeroCriancas = 0,
-                    TipoPagamento = TipoPagamento.TransferenciaBancaria,
-                    ValorTotal = 5.78m,
-                    Comissao = 1.28m
-                });
-
-                // Dinesh Chaudhary - Quarto 1
-                AdicionarReserva(new Reserva
-                {
-                    NumeroReserva = "5581128004",
-                    HospedeId = hospedes[1].Id,
-                    QuartoId = quartos[0].Id,
-                    CheckIn = new DateTime(2026, 1, 7),
-                    CheckOut = new DateTime(2026, 1, 8),
-                    DataReserva = new DateTime(2026, 1, 6),
-                    Status = StatusReserva.Confirmada,
-                    NumeroAdultos = 1,
-                    NumeroCriancas = 0,
-                    TipoPagamento = TipoPagamento.TransferenciaBancaria,
-                    ValorTotal = 8.42m,
-                    Comissao = 1.64m
-                });
-
-                // Yañez Gonzalo - Quarto 4
-                AdicionarReserva(new Reserva
-                {
-                    NumeroReserva = "5980122694",
-                    HospedeId = hospedes[2].Id,
-                    QuartoId = quartos[3].Id,
-                    CheckIn = new DateTime(2026, 1, 7),
-                    CheckOut = new DateTime(2026, 1, 8),
-                    DataReserva = new DateTime(2026, 1, 6),
-                    Status = StatusReserva.Confirmada,
-                    NumeroAdultos = 1,
-                    NumeroCriancas = 0,
-                    TipoPagamento = TipoPagamento.TransferenciaBancaria,
-                    ValorTotal = 8.64m,
-                    Comissao = 1.93m
-                });
-
-                // Om Thakkar - Quarto 3
-                AdicionarReserva(new Reserva
-                {
-                    NumeroReserva = "6015137919",
-                    HospedeId = hospedes[3].Id,
-                    QuartoId = quartos[2].Id,
-                    CheckIn = new DateTime(2026, 1, 7),
-                    CheckOut = new DateTime(2026, 1, 8),
-                    DataReserva = new DateTime(2026, 1, 7),
-                    Status = StatusReserva.Confirmada,
-                    NumeroAdultos = 1,
-                    NumeroCriancas = 0,
-                    TipoPagamento = TipoPagamento.TransferenciaBancaria,
-                    ValorTotal = 10.08m,
-                    Comissao = 2.20m
-                });
-
-                // Daniel Aileen - Quarto 5
-                AdicionarReserva(new Reserva
-                {
-                    NumeroReserva = "6144892752",
-                    HospedeId = hospedes[4].Id,
-                    QuartoId = quartos[4].Id,
-                    CheckIn = new DateTime(2026, 1, 7),
-                    CheckOut = new DateTime(2026, 1, 8),
-                    DataReserva = new DateTime(2025, 12, 11),
-                    Status = StatusReserva.Confirmada,
-                    NumeroAdultos = 1,
-                    NumeroCriancas = 0,
-                    TipoPagamento = TipoPagamento.TransferenciaBancaria,
-                    ValorTotal = 10.20m,
-                    Comissao = 2.22m
-                });
-
-                // Zach Jarretau - Quarto 1
-                AdicionarReserva(new Reserva
-                {
-                    NumeroReserva = "6184570733",
-                    HospedeId = hospedes[5].Id,
-                    QuartoId = quartos[0].Id,
-                    CheckIn = new DateTime(2026, 1, 7),
-                    CheckOut = new DateTime(2026, 1, 10),
-                    DataReserva = new DateTime(2025, 12, 16),
-                    Status = StatusReserva.Confirmada,
-                    NumeroAdultos = 1,
-                    NumeroCriancas = 0,
-                    TipoPagamento = TipoPagamento.TransferenciaBancaria,
-                    ValorTotal = 21.60m,
-                    Comissao = 4.75m
-                });
-            }
+                NumeroReserva = $"{5000000 + reservaId}",
+                HospedeId = hospede.Id,
+                QuartoId = quarto.Id,
+                CheckIn = checkIn,
+                CheckOut = checkOut,
+                DataReserva = checkIn.AddDays(-7),
+                Status = checkIn.Date <= DateTime.Today ? StatusReserva.CheckInRealizado : StatusReserva.Confirmada,
+                NumeroAdultos = 1,
+                NumeroCriancas = 0,
+                TipoPagamento = TipoPagamento.TransferenciaBancaria,
+                ValorTotal = Math.Round(valorTotal, 2),
+                Comissao = Math.Round(comissao, 2),
+                Observacoes = $"Vaga:{vaga}"
+            });
+            
+            reservaId++;
         }
 
         public List<Reserva> ObterTodas()
@@ -233,7 +211,7 @@ namespace Hotelaria.Services
 
         private string GerarNumeroReserva()
         {
-            return $"{DateTime.Now:yyyyMMddHHmmss}{new Random().Next(1000, 9999)}";
+            return $"{5000000 + _nextId}";
         }
 
         public Dictionary<string, int> ObterEstatisticas()

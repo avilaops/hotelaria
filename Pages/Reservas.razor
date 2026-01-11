@@ -2,7 +2,6 @@
 @inject ReservaService ReservaService
 @inject QuartoService QuartoService
 @inject HospedeService HospedeService
-@inject AuthService AuthService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Reservas - Hotelaria</PageTitle>
@@ -320,20 +319,6 @@
 
     protected override void OnInitialized()
     {
-        // Verificar autenticação
-        if (!AuthService.EstaAutenticado())
-        {
-            NavigationManager.NavigateTo("/login");
-            return;
-        }
-
-        // Verificar permissão mínima (Recepcionista pode gerenciar reservas)
-        if (!AuthService.TemPermissao(PerfilUsuario.Recepcionista))
-        {
-            NavigationManager.NavigateTo("/");
-            return;
-        }
-
         dataInicio = new DateTime(2026, 1, 7);
         dataFim = new DateTime(2026, 1, 8);
         CarregarReservas();

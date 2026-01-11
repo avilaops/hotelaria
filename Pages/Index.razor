@@ -2,7 +2,6 @@
 @inject ReservaService ReservaService
 @inject QuartoService QuartoService
 @inject HospedeService HospedeService
-@inject AuthService AuthService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Página Principal - Hotelaria</PageTitle>
@@ -155,13 +154,6 @@
 
     protected override void OnInitialized()
     {
-        // Verificar autenticação
-        if (!AuthService.EstaAutenticado())
-        {
-            NavigationManager.NavigateTo("/login");
-            return;
-        }
-
         CarregarDados();
         base.OnInitialized();
     }

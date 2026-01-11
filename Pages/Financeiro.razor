@@ -1,7 +1,6 @@
 @page "/financeiro"
 @inject ReservaService ReservaService
 @inject QuartoService QuartoService
-@inject AuthService AuthService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Financeiro - Hotelaria</PageTitle>
@@ -202,20 +201,6 @@
 
     protected override void OnInitialized()
     {
-        // Verificar autenticação
-        if (!AuthService.EstaAutenticado())
-        {
-            NavigationManager.NavigateTo("/login");
-            return;
-        }
-
-        // Apenas Gerente+ pode ver relatórios financeiros
-        if (!AuthService.TemPermissao(PerfilUsuario.Gerente))
-        {
-            NavigationManager.NavigateTo("/");
-            return;
-        }
-
         // Inicializar com este mês
         dataInicio = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         dataFim = DateTime.Today;

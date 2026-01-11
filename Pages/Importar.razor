@@ -3,7 +3,6 @@
 @inject ReservaService ReservaService
 @inject QuartoService QuartoService
 @inject HospedeService HospedeService
-@inject AuthService AuthService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Importar Dados - Hotelaria</PageTitle>
@@ -20,19 +19,6 @@
 
     protected override void OnInitialized()
     {
-        // Verificar autenticação
-        if (!AuthService.EstaAutenticado())
-        {
-            NavigationManager.NavigateTo("/login");
-            return;
-        }
-
-        // Apenas Gerente+ pode importar dados
-        if (!AuthService.TemPermissao(PerfilUsuario.Gerente))
-        {
-            NavigationManager.NavigateTo("/");
-            return;
-        }
     }
 
     private async Task CarregarArquivo(InputFileChangeEventArgs e)
