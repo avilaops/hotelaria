@@ -60,7 +60,7 @@ jobs:
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
-        uses: azure/webapps-deploy@de617f46172a906d0617bb0e50d81e9e3a94d2d1 # v3
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'hotelaria-app'
           slot-name: 'Production'
