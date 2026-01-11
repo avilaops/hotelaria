@@ -1,74 +1,883 @@
 @page "/relatorios"
 @inject RelatorioService RelatorioService
+@inject ReservaService ReservaService
+@inject QuartoService QuartoService
+@inject HospedeService HospedeService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JS
 
-<PageTitle>Relatórios Detalhados - Hotelaria</PageTitle>
+<PageTitle>Relatórios - Hotelaria</PageTitle>
+
+<div class="relatorios-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <div class="header-icon">📊</div>
+            <div class="header-text">
+                <h1>Relatórios e Análises</h1>
+                <p>Insights detalhados do seu negócio</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-export" @onclick="ExportarPDF">
+                📄 Exportar PDF
+            </button>
+            <button class="btn-export" @onclick="ExportarExcel">
+                📊 Exportar Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-panel">
+        <div class="filter-group">
+            <label>Período:</label>
+            <select @bind="periodoSelecionado" @onchange="AtualizarPeriodo" class="form-select">
+                <option value="hoje">Hoje</option>
+                <option value="semana">Esta Semana</option>
+                <option value="mes" selected>Este Mês</option>
+                <option value="trimestre">Trimestre</option>
+                <option value="ano">Ano</option>
+                <option value="custom">Personalizado</option>
+            </select>
+        </div>
+
+        @if (periodoSelecionado == "custom")
+        {
+            <div class="filter-group">
+                <label>De:</label>
+                <input type="date" @bind="dataInicio" class="form-control" />
+            </div>
+            <div class="filter-group">
+                <label>Até:</label>
+                <input type="date" @bind="dataFim" class="form-control" />
+            </div>
+        }
+
+        <button class="btn-filter" @onclick="CarregarDados">
+            🔍 Aplicar Filtros
+        </button>
+    </div>
+
+    <!-- KPIs Cards -->
+    <div class="kpis-grid">
+        <div class="kpi-card revenue">
+            <div class="kpi-icon">💰</div>
+            <div class="kpi-content">
+                <h3>€ @totalReceita.ToString("N2")</h3>
+                <p>Receita Total</p>
+                <span class="kpi-trend positive">+@((totalReceita / (totalReceita - 100) * 100 - 100).ToString("F1"))%</span>
+            </div>
+        </div>
+
+        <div class="kpi-card bookings">
+            <div class="kpi-icon">📋</div>
+            <div class="kpi-content">
+                <h3>@totalReservas</h3>
+                <p>Total de Reservas</p>
+                <span class="kpi-trend positive">+12%</span>
+            </div>
+        </div>
+
+        <div class="kpi-card occupancy">
+            <div class="kpi-icon">🏠</div>
+            <div class="kpi-content">
+                <h3>@taxaOcupacao.ToString("F1")%</h3>
+                <p>Taxa de Ocupação</p>
+                <span class="kpi-trend">0%</span>
+            </div>
+        </div>
+
+        <div class="kpi-card adr">
+            <div class="kpi-icon">💵</div>
+            <div class="kpi-content">
+                <h3>€ @ticketMedio.ToString("N2")</h3>
+                <p>Ticket Médio (ADR)</p>
+                <span class="kpi-trend positive">+5%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+        <!-- Reservas por Mês -->
+        <div class="chart-card">
+            <h2>📈 Reservas por Mês</h2>
+            <div class="chart-container">
+                <div class="bar-chart">
+                    @foreach (var mes in reservasPorMes)
+                    {
+                        var altura = (mes.total / (decimal)maxReservasMes * 100);
+                        <div class="bar-wrapper">
+                            <div class="bar" style="height: @altura%">
+                                <span class="bar-value">@mes.total</span>
+                            </div>
+                            <span class="bar-label">@mes.mes</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Receita por Tipo de Quarto -->
+        <div class="chart-card">
+            <h2>🏨 Receita por Tipo de Quarto</h2>
+            <div class="chart-container">
+                <div class="donut-chart">
+                    @{
+                        var totalReceitaQuartos = receitaPorTipoQuarto.Sum(x => x.valor);
+                        var startAngle = 0.0;
+                    }
+                    @foreach (var (tipo, valor, cor) in receitaPorTipoQuarto)
+                    {
+                        var percentual = (double)(valor / totalReceitaQuartos) * 100;
+                        var angle = percentual * 3.6;
+                        
+                        <div class="donut-segment" style="--start-angle: @(startAngle)deg; --angle: @(angle)deg; --color: @cor"></div>
+                        
+                        startAngle += angle;
+                    }
+                </div>
+                <div class="chart-legend">
+                    @foreach (var (tipo, valor, cor) in receitaPorTipoQuarto)
+                    {
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: @cor"></span>
+                            <span>@tipo: €@valor.ToString("N2")</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 10 Hóspedes -->
+        <div class="chart-card">
+            <h2>⭐ Top 10 Hóspedes</h2>
+            <div class="ranking-list">
+                @for (int i = 0; i < topHospedes.Count && i < 10; i++)
+                {
+                    var hospede = topHospedes[i];
+                    <div class="ranking-item">
+                        <span class="ranking-position">@((i + 1))</span>
+                        <span class="ranking-name">@hospede.nome</span>
+                        <span class="ranking-value">€ @hospede.total.ToString("N2")</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Canais de Reserva -->
+        <div class="chart-card">
+            <h2>🌐 Canais de Reserva</h2>
+            <div class="chart-container">
+                @foreach (var (canal, quantidade) in reservasPorCanal)
+                {
+                    var percentual = (decimal)quantidade / totalReservas * 100;
+                    <div class="progress-item">
+                        <div class="progress-header">
+                            <span>@canal</span>
+                            <span>@quantidade (@percentual.ToString("F1")%)</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: @percentual%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Detalhada -->
+    <div class="table-card">
+        <div class="table-header">
+            <h2>📋 Reservas Detalhadas</h2>
+            <div class="table-actions">
+                <input type="text" placeholder="Buscar..." @bind="filtroTexto" @bind:event="oninput" class="search-input" />
+                <button class="btn-icon" @onclick="CarregarDados">🔄</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Nº Reserva</th>
+                        <th>Hóspede</th>
+                        <th>Quarto</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Noites</th>
+                        <th>Canal</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var reserva in reservasFiltradas.Take(50))
+                    {
+                        <tr>
+                            <td>@reserva.DataReserva.ToString("dd/MM/yy")</td>
+                            <td><strong>@reserva.NumeroReserva</strong></td>
+                            <td>@reserva.Hospede?.Nome</td>
+                            <td>@reserva.Quarto?.Numero</td>
+                            <td>@reserva.CheckIn.ToString("dd/MM")</td>
+                            <td>@reserva.CheckOut.ToString("dd/MM")</td>
+                            <td>@reserva.DiasHospedagem</td>
+                            <td>
+                                <span class="badge badge-@GetCanalClass(reserva.TipoPagamento)">
+                                    @GetCanalTexto(reserva.TipoPagamento)
+                                </span>
+                            </td>
+                            <td class="price">€ @reserva.ValorTotal.ToString("N2")</td>
+                            <td>
+                                <span class="status-badge status-@reserva.Status.ToString().ToLower()">
+                                    @GetStatusTexto(reserva.Status)
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer">
+            <span>Mostrando @Math.Min(50, reservasFiltradas.Count) de @reservasFiltradas.Count registros</span>
+        </div>
+    </div>
+</div>
+
+<style>
+    .relatorios-page {
+        padding: 20px;
+        background: #f5f7fa;
+        min-height: 100vh;
+    }
+
+    /* Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .header-icon {
+        font-size: 3rem;
+    }
+
+    .header-text h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        color: #2c3e50;
+    }
+
+    .header-text p {
+        margin: 5px 0 0 0;
+        color: #7f8c8d;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-export {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: transform 0.2s;
+    }
+
+    .btn-export:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Filtros */
+    .filters-panel {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .filter-group label {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        font-weight: 500;
+    }
+
+    .form-select, .form-control {
+        padding: 10px;
+        border: 2px solid #ecf0f1;
+        border-radius: 8px;
+        font-size: 0.95rem;
+    }
+
+    .btn-filter {
+        padding: 10px 20px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    /* KPIs */
+    .kpis-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .kpi-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+    }
+
+    .kpi-card.revenue::before { background: #2ecc71; }
+    .kpi-card.bookings::before { background: #3498db; }
+    .kpi-card.occupancy::before { background: #f39c12; }
+    .kpi-card.adr::before { background: #9b59b6; }
+
+    .kpi-icon {
+        font-size: 2.5rem;
+    }
+
+    .kpi-content h3 {
+        margin: 0;
+        font-size: 2rem;
+        color: #2c3e50;
+    }
+
+    .kpi-content p {
+        margin: 5px 0;
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+
+    .kpi-trend {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .kpi-trend.positive {
+        background: #d5f4e6;
+        color: #27ae60;
+    }
+
+    /* Charts */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .chart-card h2 {
+        margin: 0 0 20px 0;
+        font-size: 1.2rem;
+        color: #2c3e50;
+    }
+
+    /* Bar Chart */
+    .bar-chart {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+        height: 200px;
+        padding: 10px 0;
+    }
+
+    .bar-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .bar {
+        width: 100%;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px 8px 0 0;
+        position: relative;
+        transition: all 0.3s;
+        min-height: 20px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 5px;
+    }
+
+    .bar:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .bar-value {
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .bar-label {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+    }
+
+    /* Ranking */
+    .ranking-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .ranking-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: transform 0.2s;
+    }
+
+    .ranking-item:hover {
+        transform: translateX(5px);
+        background: #e8f4f8;
+    }
+
+    .ranking-position {
+        width: 30px;
+        height: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .ranking-name {
+        flex: 1;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .ranking-value {
+        font-weight: 700;
+        color: #27ae60;
+    }
+
+    /* Progress Bars */
+    .progress-item {
+        margin-bottom: 15px;
+    }
+
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: #2c3e50;
+    }
+
+    .progress-bar {
+        height: 12px;
+        background: #ecf0f1;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 6px;
+        transition: width 0.5s ease;
+    }
+
+    /* Table */
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .table-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid #ecf0f1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-header h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: #2c3e50;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .search-input {
+        padding: 8px 15px;
+        border: 2px solid #ecf0f1;
+        border-radius: 8px;
+        width: 250px;
+    }
+
+    .btn-icon {
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table thead {
+        background: #f8f9fa;
+    }
+
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+        padding: 15px;
+        border-top: 1px solid #ecf0f1;
+        color: #2c3e50;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .price {
+        font-weight: 600;
+        color: #27ae60;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .badge-booking { background: #e3f2fd; color: #1976d2; }
+    .badge-airbnb { background: #ffe8e8; color: #ff5a5f; }
+    .badge-direto { background: #e8f5e9; color: #388e3c; }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .status-badge.status-confirmada { background: #d5f4e6; color: #27ae60; }
+    .status-badge.status-checkinrealizado { background: #fff3cd; color: #856404; }
+    .status-badge.status-checkoutrealizado { background: #d1ecf1; color: #0c5460; }
+
+    .table-footer {
+        padding: 15px 25px;
+        border-top: 1px solid #ecf0f1;
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .kpis-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-actions {
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .btn-export {
+            width: 100%;
+        }
+    }
+</style>
 
 @code {
-    private List<ReservaDetalhada> reservas = new();
-    private RelatorioEstatisticas? estatisticas;
-    
-    private DateTime? dataInicio;
-    private DateTime? dataFim;
-    private string statusFiltro = "";
-    private string numeroReserva = "";
+    private DateTime dataInicio = DateTime.Today.AddMonths(-1);
+    private DateTime dataFim = DateTime.Today;
+    private string periodoSelecionado = "mes";
+    private string filtroTexto = "";
+
+    private decimal totalReceita = 0;
+    private int totalReservas = 0;
+    private decimal taxaOcupacao = 0;
+    private decimal ticketMedio = 0;
+
+    private List<(string mes, int total)> reservasPorMes = new();
+    private List<(string tipo, decimal valor, string cor)> receitaPorTipoQuarto = new();
+    private List<(string nome, decimal total)> topHospedes = new();
+    private List<(string canal, int quantidade)> reservasPorCanal = new();
+    private int maxReservasMes = 1;
+
+    private List<Reserva> todasReservas = new();
+    private List<Reserva> reservasFiltradas = new();
 
     protected override void OnInitialized()
     {
-        // Carregar dados do mês atual por padrão
-        dataInicio = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        dataFim = dataInicio.Value.AddMonths(1).AddDays(-1);
         CarregarDados();
+    }
+
+    private void AtualizarPeriodo(ChangeEventArgs e)
+    {
+        periodoSelecionado = e.Value?.ToString() ?? "mes";
+        
+        if (periodoSelecionado != "custom")
+        {
+            var hoje = DateTime.Today;
+            switch (periodoSelecionado)
+            {
+                case "hoje":
+                    dataInicio = hoje;
+                    dataFim = hoje;
+                    break;
+                case "semana":
+                    dataInicio = hoje.AddDays(-(int)hoje.DayOfWeek);
+                    dataFim = hoje;
+                    break;
+                case "mes":
+                    dataInicio = new DateTime(hoje.Year, hoje.Month, 1);
+                    dataFim = hoje;
+                    break;
+                case "trimestre":
+                    var trimestre = (hoje.Month - 1) / 3;
+                    dataInicio = new DateTime(hoje.Year, trimestre * 3 + 1, 1);
+                    dataFim = hoje;
+                    break;
+                case "ano":
+                    dataInicio = new DateTime(hoje.Year, 1, 1);
+                    dataFim = hoje;
+                    break;
+            }
+            CarregarDados();
+        }
     }
 
     private void CarregarDados()
     {
-        StatusReserva? status = null;
-        if (!string.IsNullOrWhiteSpace(statusFiltro))
-        {
-            Enum.TryParse<StatusReserva>(statusFiltro, out var statusParsed);
-            status = statusParsed;
-        }
+        todasReservas = ReservaService.ObterTodas()
+            .Where(r => r.DataReserva.Date >= dataInicio.Date && 
+                       r.DataReserva.Date <= dataFim.Date &&
+                       r.Status != StatusReserva.Cancelada)
+            .ToList();
 
-        reservas = RelatorioService.ObterReservasDetalhadas(
-            dataInicio, 
-            dataFim, 
-            status, 
-            numeroReserva
-        );
+        AplicarFiltro();
 
-        estatisticas = RelatorioService.ObterEstatisticas(dataInicio, dataFim);
+        // KPIs
+        totalReceita = todasReservas.Sum(r => r.ValorTotal);
+        totalReservas = todasReservas.Count;
+        ticketMedio = totalReservas > 0 ? totalReceita / totalReservas : 0;
+
+        // Taxa de ocupação
+        var diasPeriodo = (dataFim - dataInicio).Days + 1;
+        var totalQuartos = QuartoService.ObterTodos().Count;
+        var quartosOcupados = todasReservas.Sum(r => r.DiasHospedagem);
+        var quartosDisponiveis = totalQuartos * diasPeriodo;
+        taxaOcupacao = quartosDisponiveis > 0 ? (decimal)quartosOcupados / quartosDisponiveis * 100 : 0;
+
+        // Reservas por mês (últimos 6 meses)
+        reservasPorMes = Enumerable.Range(0, 6)
+            .Select(i => dataFim.AddMonths(-5 + i))
+            .Select(mes => (
+                mes: mes.ToString("MMM"),
+                total: ReservaService.ObterTodas().Count(r => 
+                    r.DataReserva.Year == mes.Year && 
+                    r.DataReserva.Month == mes.Month &&
+                    r.Status != StatusReserva.Cancelada)
+            ))
+            .ToList();
+        maxReservasMes = reservasPorMes.Any() ? reservasPorMes.Max(x => x.total) : 1;
+
+        // Receita por tipo de quarto
+        receitaPorTipoQuarto = todasReservas
+            .Where(r => r.Quarto != null)
+            .GroupBy(r => r.Quarto!.Tipo)
+            .Select(g => (
+                tipo: GetTipoQuartoTexto(g.Key),
+                valor: g.Sum(r => r.ValorTotal),
+                cor: GetCorTipoQuarto(g.Key)
+            ))
+            .OrderByDescending(x => x.valor)
+            .ToList();
+
+        // Top hóspedes
+        topHospedes = todasReservas
+            .Where(r => r.Hospede != null)
+            .GroupBy(r => r.Hospede!.Nome)
+            .Select(g => (nome: g.Key, total: g.Sum(r => r.ValorTotal)))
+            .OrderByDescending(x => x.total)
+            .Take(10)
+            .ToList();
+
+        // Canais de reserva
+        reservasPorCanal = todasReservas
+            .GroupBy(r => GetCanalTexto(r.TipoPagamento))
+            .Select(g => (canal: g.Key, quantidade: g.Count()))
+            .OrderByDescending(x => x.quantidade)
+            .ToList();
     }
 
-    private void AplicarFiltros()
+    private void AplicarFiltro()
     {
-        CarregarDados();
-    }
-
-    private void LimparFiltros()
-    {
-        dataInicio = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        dataFim = dataInicio.Value.AddMonths(1).AddDays(-1);
-        statusFiltro = "";
-        numeroReserva = "";
-        CarregarDados();
-    }
-
-    private async Task ExportarCSV()
-    {
-        try
+        if (string.IsNullOrWhiteSpace(filtroTexto))
         {
-            var csv = RelatorioService.ExportarParaCSV(reservas);
-            var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
-            var base64 = Convert.ToBase64String(bytes);
-            var fileName = $"relatorio_reservas_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            
-            await JS.InvokeVoidAsync("downloadFile", fileName, base64);
+            reservasFiltradas = todasReservas;
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"Erro ao exportar CSV: {ex.Message}");
+            var filtro = filtroTexto.ToLower();
+            reservasFiltradas = todasReservas.Where(r =>
+                r.NumeroReserva.ToLower().Contains(filtro) ||
+                (r.Hospede?.Nome.ToLower().Contains(filtro) ?? false) ||
+                (r.Quarto?.Numero.ToLower().Contains(filtro) ?? false)
+            ).ToList();
         }
     }
+
+    private async Task ExportarPDF()
+    {
+        // Implementar exportação PDF
+        await JS.InvokeVoidAsync("alert", "Exportação PDF em desenvolvimento");
+    }
+
+    private async Task ExportarExcel()
+    {
+        // Implementar exportação Excel
+        await JS.InvokeVoidAsync("alert", "Exportação Excel em desenvolvimento");
+    }
+
+    private string GetTipoQuartoTexto(TipoQuarto tipo) => tipo switch
+    {
+        TipoQuarto.Standard => "Standard",
+        TipoQuarto.Deluxe => "Deluxe",
+        TipoQuarto.Suite => "Suíte",
+        TipoQuarto.Presidential => "Presidential",
+        _ => ""
+    };
+
+    private string GetCorTipoQuarto(TipoQuarto tipo) => tipo switch
+    {
+        TipoQuarto.Standard => "#3498db",
+        TipoQuarto.Deluxe => "#9b59b6",
+        TipoQuarto.Suite => "#f39c12",
+        TipoQuarto.Presidential => "#e74c3c",
+        _ => "#95a5a6"
+    };
+
+    private string GetCanalTexto(TipoPagamento tipo) => tipo switch
+    {
+        TipoPagamento.BookingCom => "Booking.com",
+        TipoPagamento.TransferenciaBancaria => "Direto",
+        TipoPagamento.CartaoCredito => "Direto",
+        _ => "Outro"
+    };
+
+    private string GetCanalClass(TipoPagamento tipo) => tipo switch
+    {
+        TipoPagamento.BookingCom => "booking",
+        _ => "direto"
+    };
+
+    private string GetStatusTexto(StatusReserva status) => status switch
+    {
+        StatusReserva.Confirmada => "Confirmada",
+        StatusReserva.CheckInRealizado => "Check-in",
+        StatusReserva.CheckOutRealizado => "Check-out",
+        StatusReserva.Cancelada => "Cancelada",
+        _ => ""
+    };
 }
