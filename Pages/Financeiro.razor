@@ -93,14 +93,17 @@
         <div class="quartos-receita">
             @foreach (var (tipo, valor) in receitasPorTipoQuarto.OrderByDescending(x => x.Value))
             {
+                var numReservas = reservasPorTipo.ContainsKey(tipo) ? reservasPorTipo[tipo] : 0;
+                var ticketMedio = numReservas > 0 ? valor / numReservas : 0;
+                
                 <div class="receita-item">
                     <div class="receita-header">
                         <span class="tipo">@GetTipoQuartoTexto(tipo)</span>
                         <span class="valor">€ @valor.ToString("N2")</span>
                     </div>
                     <div class="receita-detalhes">
-                        <span>@reservasPorTipo[tipo] reserva@(reservasPorTipo[tipo] > 1 ? "s" : "")</span>
-                        <span class="ticket-medio">Ticket médio: € @(valor / reservasPorTipo[tipo]).ToString("N2")</span>
+                        <span>@numReservas reserva@(numReservas != 1 ? "s" : "")</span>
+                        <span class="ticket-medio">Ticket médio: € @ticketMedio.ToString("N2")</span>
                     </div>
                 </div>
             }
