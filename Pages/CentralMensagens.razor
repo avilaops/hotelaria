@@ -1,0 +1,918 @@
+@page "/mensagens"
+@inject NavigationManager NavigationManager
+
+<PageTitle>Central de Mensagens - Hotelaria</PageTitle>
+
+<div class="mensagens-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <div class="header-icon">💬</div>
+            <div class="header-text">
+                <h1>Central de Mensagens</h1>
+                <p>Todas as suas conversas em um só lugar</p>
+            </div>
+        </div>
+        <div class="header-stats">
+            <div class="stat-badge">
+                <span class="badge-number">@mensagensNaoLidas</span>
+                <span class="badge-label">Não lidas</span>
+            </div>
+            <div class="stat-badge">
+                <span class="badge-number">@conversasAtivas</span>
+                <span class="badge-label">Ativas</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="mensagens-container">
+        <!-- Sidebar -->
+        <div class="conversas-sidebar">
+            <!-- Filtros -->
+            <div class="filters-bar">
+                <button class="filter-btn @(filtroAtual == "todas" ? "active" : "")" @onclick='() => AplicarFiltro("todas")'>
+                    Todas (@totalMensagens)
+                </button>
+                <button class="filter-btn @(filtroAtual == "nao-lidas" ? "active" : "")" @onclick='() => AplicarFiltro("nao-lidas")'>
+                    Não Lidas (@mensagensNaoLidas)
+                </button>
+            </div>
+
+            <!-- Filtro por Plataforma -->
+            <div class="platform-filters">
+                <button class="platform-btn @(plataformaFiltro == "todas" ? "active" : "")" @onclick='() => FiltrarPlataforma("todas")'>
+                    <span class="platform-icon">🌐</span>
+                    Todas
+                </button>
+                <button class="platform-btn airbnb @(plataformaFiltro == "airbnb" ? "active" : "")" @onclick='() => FiltrarPlataforma("airbnb")'>
+                    <img src="https://a0.muscache.com/airbnb/static/icons/android-icon-192x192.png" alt="Airbnb" class="platform-logo" />
+                    Airbnb
+                </button>
+                <button class="platform-btn booking @(plataformaFiltro == "booking" ? "active" : "")" @onclick='() => FiltrarPlataforma("booking")'>
+                    <img src="https://cf.bstatic.com/static/img/booking_logo_knowledge_graph/247454a990efac1952e44dddbf30c58677aa0fd8.png" alt="Booking" class="platform-logo" />
+                    Booking
+                </button>
+                <button class="platform-btn hostelworld @(plataformaFiltro == "hostelworld" ? "active" : "")" @onclick='() => FiltrarPlataforma("hostelworld")'>
+                    <img src="https://www.hostelworld.com/pwa/assets/img/brand/logo.png" alt="Hostelworld" class="platform-logo" />
+                    Hostelworld
+                </button>
+            </div>
+
+            <!-- Busca -->
+            <div class="search-box">
+                <input type="text" placeholder="Buscar conversas..." @bind="buscaTexto" @bind:event="oninput" @onkeyup="BuscarConversas" />
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <!-- Lista de Conversas -->
+            <div class="conversas-lista">
+                @foreach (var conversa in conversasFiltradas)
+                {
+                    <div class="conversa-item @(conversaSelecionada?.Id == conversa.Id ? "active" : "") @(conversa.NaoLida ? "unread" : "")"
+                         @onclick="() => SelecionarConversa(conversa)">
+                        
+                        <div class="conversa-avatar">
+                            <img src="@GetAvatarUrl(conversa.NomeHospede)" alt="@conversa.NomeHospede" />
+                            @if (conversa.NaoLida)
+                            {
+                                <span class="unread-indicator"></span>
+                            }
+                        </div>
+
+                        <div class="conversa-info">
+                            <div class="conversa-header">
+                                <span class="conversa-nome">@conversa.NomeHospede</span>
+                                <span class="conversa-tempo">@FormatarTempo(conversa.UltimaMensagem)</span>
+                            </div>
+                            <div class="conversa-preview">
+                                <span class="conversa-texto">@conversa.PreviewMensagem</span>
+                            </div>
+                            <div class="conversa-meta">
+                                <img src="@GetPlatformLogo(conversa.Plataforma)" alt="@conversa.Plataforma" class="platform-badge" />
+                                <span class="reserva-numero">#@conversa.NumeroReserva</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (!conversasFiltradas.Any())
+                {
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>Nenhuma conversa encontrada</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            @if (conversaSelecionada != null)
+            {
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <img src="@GetAvatarUrl(conversaSelecionada.NomeHospede)" alt="@conversaSelecionada.NomeHospede" class="chat-avatar" />
+                        <div class="chat-header-text">
+                            <h3>@conversaSelecionada.NomeHospede</h3>
+                            <div class="chat-header-meta">
+                                <img src="@GetPlatformLogo(conversaSelecionada.Plataforma)" alt="@conversaSelecionada.Plataforma" class="platform-logo-small" />
+                                <span>Reserva #@conversaSelecionada.NumeroReserva</span>
+                                <span class="separator">•</span>
+                                <span>Check-in: @conversaSelecionada.CheckIn.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button class="btn-icon" title="Informações da reserva">ℹ️</button>
+                        <button class="btn-icon" title="Mais opções">⋮</button>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="chat-messages" @ref="messagesContainer">
+                    @foreach (var mensagem in conversaSelecionada.Mensagens)
+                    {
+                        <div class="message @(mensagem.Enviada ? "sent" : "received")">
+                            @if (!mensagem.Enviada)
+                            {
+                                <img src="@GetAvatarUrl(conversaSelecionada.NomeHospede)" alt="Avatar" class="message-avatar" />
+                            }
+                            <div class="message-content">
+                                <div class="message-bubble">
+                                    <p>@mensagem.Texto</p>
+                                </div>
+                                <span class="message-time">@mensagem.DataHora.ToString("HH:mm")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Input -->
+                <div class="chat-input-area">
+                    <button class="btn-attachment">📎</button>
+                    <textarea 
+                        class="chat-input" 
+                        placeholder="Digite sua mensagem..."
+                        @bind="novaMensagem"
+                        @onkeydown="HandleKeyPress"
+                        rows="1"></textarea>
+                    <button class="btn-send" @onclick="EnviarMensagem" disabled="@string.IsNullOrWhiteSpace(novaMensagem)">
+                        <span>📤</span>
+                    </button>
+                </div>
+            }
+            else
+            {
+                <!-- Empty State -->
+                <div class="chat-empty">
+                    <div class="empty-illustration">💬</div>
+                    <h3>Selecione uma conversa</h3>
+                    <p>Escolha uma conversa da lista para começar a responder</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .mensagens-page {
+        padding: 20px;
+        background: #f5f7fa;
+        height: calc(100vh - 60px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        padding: 20px 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .header-icon {
+        font-size: 2.5rem;
+    }
+
+    .header-text h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        color: #2c3e50;
+    }
+
+    .header-text p {
+        margin: 5px 0 0 0;
+        color: #7f8c8d;
+        font-size: 0.95rem;
+    }
+
+    .header-stats {
+        display: flex;
+        gap: 20px;
+    }
+
+    .stat-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .badge-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #3498db;
+    }
+
+    .badge-label {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+    }
+
+    /* Container */
+    .mensagens-container {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 20px;
+        flex: 1;
+        min-height: 0;
+    }
+
+    /* Sidebar */
+    .conversas-sidebar {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .filters-bar {
+        display: flex;
+        padding: 15px;
+        gap: 10px;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    .filter-btn {
+        flex: 1;
+        padding: 8px 16px;
+        background: #f8f9fa;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #7f8c8d;
+        transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+        background: #3498db;
+        color: white;
+    }
+
+    .platform-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 15px;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    .platform-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .platform-btn.active {
+        border-color: #3498db;
+        background: #ebf5fb;
+    }
+
+    .platform-logo {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+    }
+
+    .platform-icon {
+        font-size: 1.2rem;
+    }
+
+    .search-box {
+        position: relative;
+        padding: 15px;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 10px 40px 10px 15px;
+        border: 2px solid #ecf0f1;
+        border-radius: 8px;
+        font-size: 0.95rem;
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 25px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+    }
+
+    /* Conversas Lista */
+    .conversas-lista {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .conversa-item {
+        display: flex;
+        gap: 12px;
+        padding: 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #ecf0f1;
+        transition: background 0.2s;
+    }
+
+    .conversa-item:hover {
+        background: #f8f9fa;
+    }
+
+    .conversa-item.active {
+        background: #ebf5fb;
+        border-left: 3px solid #3498db;
+    }
+
+    .conversa-item.unread {
+        background: #f0f8ff;
+    }
+
+    .conversa-avatar {
+        position: relative;
+        width: 50px;
+        height: 50px;
+        flex-shrink: 0;
+    }
+
+    .conversa-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .unread-indicator {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 12px;
+        height: 12px;
+        background: #e74c3c;
+        border: 2px solid white;
+        border-radius: 50%;
+    }
+
+    .conversa-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .conversa-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+
+    .conversa-nome {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.95rem;
+    }
+
+    .conversa-tempo {
+        font-size: 0.8rem;
+        color: #95a5a6;
+    }
+
+    .conversa-preview {
+        margin-bottom: 8px;
+    }
+
+    .conversa-texto {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .conversa-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+    }
+
+    .platform-badge {
+        width: 16px;
+        height: 16px;
+        object-fit: contain;
+    }
+
+    .reserva-numero {
+        color: #95a5a6;
+    }
+
+    /* Chat Area */
+    .chat-area {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 25px;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    .chat-header-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .chat-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+    }
+
+    .chat-header-text h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #2c3e50;
+    }
+
+    .chat-header-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        margin-top: 5px;
+    }
+
+    .platform-logo-small {
+        width: 16px;
+        height: 16px;
+    }
+
+    .separator {
+        color: #bdc3c7;
+    }
+
+    .chat-header-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: none;
+        background: #f8f9fa;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: background 0.2s;
+    }
+
+    .btn-icon:hover {
+        background: #ecf0f1;
+    }
+
+    /* Messages */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+
+    .message {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        animation: fadeIn 0.3s;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.sent {
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .message.sent .message-content {
+        align-items: flex-end;
+    }
+
+    .message-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        max-width: 70%;
+    }
+
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 16px;
+        word-wrap: break-word;
+    }
+
+    .message.received .message-bubble {
+        background: white;
+        color: #2c3e50;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .message.sent .message-bubble {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .message-bubble p {
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        color: #95a5a6;
+        margin-top: 4px;
+        padding: 0 4px;
+    }
+
+    /* Input */
+    .chat-input-area {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        padding: 20px;
+        border-top: 1px solid #ecf0f1;
+        background: white;
+    }
+
+    .btn-attachment {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: #f8f9fa;
+        cursor: pointer;
+        font-size: 1.2rem;
+    }
+
+    .chat-input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 2px solid #ecf0f1;
+        border-radius: 20px;
+        font-size: 0.95rem;
+        resize: none;
+        max-height: 120px;
+        font-family: inherit;
+    }
+
+    .btn-send {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: transform 0.2s;
+    }
+
+    .btn-send:not(:disabled):hover {
+        transform: scale(1.1);
+    }
+
+    .btn-send:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Empty States */
+    .empty-state, .chat-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        color: #95a5a6;
+        text-align: center;
+    }
+
+    .chat-empty {
+        flex: 1;
+    }
+
+    .empty-icon, .empty-illustration {
+        font-size: 4rem;
+        margin-bottom: 15px;
+    }
+
+    .empty-state p, .chat-empty h3 {
+        margin: 10px 0;
+        color: #7f8c8d;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .mensagens-container {
+            grid-template-columns: 1fr;
+        }
+
+        .conversas-sidebar {
+            display: none;
+        }
+
+        .mensagens-container.showing-chat .conversas-sidebar {
+            display: none;
+        }
+
+        .mensagens-container.showing-chat .chat-area {
+            display: flex;
+        }
+    }
+</style>
+
+@code {
+    private ElementReference messagesContainer;
+
+    private int mensagensNaoLidas = 14;
+    private int conversasAtivas = 52;
+    private int totalMensagens = 52;
+
+    private string filtroAtual = "todas";
+    private string plataformaFiltro = "todas";
+    private string buscaTexto = "";
+    private string novaMensagem = "";
+
+    private Conversa? conversaSelecionada;
+    private List<Conversa> todasConversas = new();
+    private List<Conversa> conversasFiltradas = new();
+
+    protected override void OnInitialized()
+    {
+        CarregarConversas();
+    }
+
+    private void CarregarConversas()
+    {
+        // Dados de exemplo
+        todasConversas = new List<Conversa>
+        {
+            new Conversa
+            {
+                Id = 1,
+                NomeHospede = "Maria Silva",
+                NumeroReserva = "5000003",
+                Plataforma = "airbnb",
+                CheckIn = DateTime.Today.AddDays(2),
+                UltimaMensagem = DateTime.Now.AddMinutes(-5),
+                PreviewMensagem = "Olá, gostaria de confirmar o horário do check-in. Vamos chegar por volta das 15h...",
+                NaoLida = true,
+                Mensagens = new List<Mensagem>
+                {
+                    new Mensagem { Texto = "Olá! Tudo bem?", DataHora = DateTime.Now.AddHours(-2), Enviada = false },
+                    new Mensagem { Texto = "Olá Maria! Tudo ótimo, e você?", DataHora = DateTime.Now.AddHours(-2).AddMinutes(2), Enviada = true },
+                    new Mensagem { Texto = "Gostaria de confirmar o horário do check-in", DataHora = DateTime.Now.AddMinutes(-5), Enviada = false }
+                }
+            },
+            new Conversa
+            {
+                Id = 2,
+                NomeHospede = "John Smith",
+                NumeroReserva = "5000008",
+                Plataforma = "booking",
+                CheckIn = DateTime.Today.AddDays(5),
+                UltimaMensagem = DateTime.Now.AddHours(-1),
+                PreviewMensagem = "Is breakfast included in the rate? Also, do you have parking available?",
+                NaoLida = true,
+                Mensagens = new List<Mensagem>()
+            },
+            new Conversa
+            {
+                Id = 3,
+                NomeHospede = "Sophie Martin",
+                NumeroReserva = "5000016",
+                Plataforma = "hostelworld",
+                CheckIn = DateTime.Today.AddDays(1),
+                UltimaMensagem = DateTime.Now.AddHours(-3),
+                PreviewMensagem = "Perfect! See you tomorrow 😊",
+                NaoLida = false,
+                Mensagens = new List<Mensagem>()
+            },
+            new Conversa
+            {
+                Id = 4,
+                NomeHospede = "Carlos Rodriguez",
+                NumeroReserva = "5000025",
+                Plataforma = "airbnb",
+                CheckIn = DateTime.Today,
+                UltimaMensagem = DateTime.Now.AddMinutes(-30),
+                PreviewMensagem = "Ya estamos cerca! Llegaremos en 15 minutos aproximadamente.",
+                NaoLida = true,
+                Mensagens = new List<Mensagem>()
+            },
+            new Conversa
+            {
+                Id = 5,
+                NomeHospede = "Emma Johnson",
+                NumeroReserva = "5000030",
+                Plataforma = "booking",
+                CheckIn = DateTime.Today.AddDays(7),
+                UltimaMensagem = DateTime.Now.AddDays(-1),
+                PreviewMensagem = "Thank you for the information! Looking forward to our stay.",
+                NaoLida = false,
+                Mensagens = new List<Mensagem>()
+            }
+        };
+
+        AplicarFiltros();
+    }
+
+    private void AplicarFiltro(string filtro)
+    {
+        filtroAtual = filtro;
+        AplicarFiltros();
+    }
+
+    private void FiltrarPlataforma(string plataforma)
+    {
+        plataformaFiltro = plataforma;
+        AplicarFiltros();
+    }
+
+    private void AplicarFiltros()
+    {
+        conversasFiltradas = todasConversas;
+
+        // Filtro de leitura
+        if (filtroAtual == "nao-lidas")
+        {
+            conversasFiltradas = conversasFiltradas.Where(c => c.NaoLida).ToList();
+        }
+
+        // Filtro de plataforma
+        if (plataformaFiltro != "todas")
+        {
+            conversasFiltradas = conversasFiltradas.Where(c => c.Plataforma == plataformaFiltro).ToList();
+        }
+
+        // Busca
+        if (!string.IsNullOrWhiteSpace(buscaTexto))
+        {
+            var busca = buscaTexto.ToLower();
+            conversasFiltradas = conversasFiltradas.Where(c =>
+                c.NomeHospede.ToLower().Contains(busca) ||
+                c.NumeroReserva.Contains(busca) ||
+                c.PreviewMensagem.ToLower().Contains(busca)
+            ).ToList();
+        }
+
+        // Ordenar por mais recente
+        conversasFiltradas = conversasFiltradas.OrderByDescending(c => c.UltimaMensagem).ToList();
+    }
+
+    private void BuscarConversas()
+    {
+        AplicarFiltros();
+    }
+
+    private void SelecionarConversa(Conversa conversa)
+    {
+        conversaSelecionada = conversa;
+        conversa.NaoLida = false;
+        mensagensNaoLidas = todasConversas.Count(c => c.NaoLida);
+    }
+
+    private async Task EnviarMensagem()
+    {
+        if (conversaSelecionada == null || string.IsNullOrWhiteSpace(novaMensagem)) return;
+
+        conversaSelecionada.Mensagens.Add(new Mensagem
+        {
+            Texto = novaMensagem,
+            DataHora = DateTime.Now,
+            Enviada = true
+        });
+
+        novaMensagem = "";
+        StateHasChanged();
+
+        // Scroll to bottom
+        await Task.Delay(100);
+        // await JS.InvokeVoidAsync("scrollToBottom", messagesContainer);
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await EnviarMensagem();
+        }
+    }
+
+    private string GetPlatformLogo(string plataforma) => plataforma switch
+    {
+        "airbnb" => "https://a0.muscache.com/airbnb/static/icons/android-icon-192x192.png",
+        "booking" => "https://cf.bstatic.com/static/img/booking_logo_knowledge_graph/247454a990efac1952e44dddbf30c58677aa0fd8.png",
+        "hostelworld" => "https://www.hostelworld.com/pwa/assets/img/brand/logo.png",
+        _ => ""
+    };
+
+    private string GetAvatarUrl(string nome)
+    {
+        return $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(nome)}&background=random&size=128";
+    }
+
+    private string FormatarTempo(DateTime tempo)
+    {
+        var diff = DateTime.Now - tempo;
+        
+        if (diff.TotalMinutes < 1) return "agora";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}min";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h";
+        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d";
+        
+        return tempo.ToString("dd/MM");
+    }
+
+    public class Conversa
+    {
+        public int Id { get; set; }
+        public string NomeHospede { get; set; } = "";
+        public string NumeroReserva { get; set; } = "";
+        public string Plataforma { get; set; } = "";
+        public DateTime CheckIn { get; set; }
+        public DateTime UltimaMensagem { get; set; }
+        public string PreviewMensagem { get; set; } = "";
+        public bool NaoLida { get; set; }
+        public List<Mensagem> Mensagens { get; set; } = new();
+    }
+
+    public class Mensagem
+    {
+        public string Texto { get; set; } = "";
+        public DateTime DataHora { get; set; }
+        public bool Enviada { get; set; }
+    }
+}
