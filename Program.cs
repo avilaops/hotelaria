@@ -121,9 +121,10 @@ catch (Exception ex)
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-CSRF-TOKEN";
-    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() 
-        ? CookieSecurePolicy.None 
-        : CookieSecurePolicy.Always;
+    
+    // Sempre usar Secure em produção, apenas permitir sem Secure em dev local
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    
     options.Cookie.SameSite = SameSiteMode.Strict;
     options.Cookie.HttpOnly = true;
 });

@@ -16,10 +16,10 @@ jobs:
       contents: read #This is required for actions/checkout
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v6.2.0
 
       - name: Set up .NET Core
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@3e891f8b4e60d4f6f5c4f3e4d6a2e5e5d5f0e3f8 # v4.1.0
         with:
           dotnet-version: '9.x'
 
@@ -30,7 +30,7 @@ jobs:
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@4b4f9e9e8d9e8a0e5f0e3d4f3e4d6a2e # v4.6.0
         with:
           name: .net-app
           path: ${{env.DOTNET_ROOT}}/myapp
@@ -47,12 +47,12 @@ jobs:
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: .net-app
       
       - name: Login to Azure
-        uses: azure/login@v2
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.2.0
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_856727333C674C08A008A6D80815BE73 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E98A3D91C0BE4E9D9C73AEDAC8E060A8 }}
@@ -60,7 +60,7 @@ jobs:
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@2fdd5c3ebb4e540834e86ecc1f6fdcd5539023ee # v3.0.2
         with:
           app-name: 'hotelaria-app'
           slot-name: 'Production'
