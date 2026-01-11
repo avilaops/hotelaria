@@ -50,7 +50,7 @@ jobs:
     # Setup .NET para análise de C#
     - name: ⚙️ Setup .NET
       if: matrix.language == 'csharp'
-      uses: actions/setup-dotnet@6bd8b7f7774af54e05809fcc5431931b3eb1ddee # v4.0.1
+      uses: actions/setup-dotnet@25328d894dc34d01d191df4849cb7f5402e3f142 # v4.0.1
       with:
         dotnet-version: '9.0.x'
 
